@@ -1,0 +1,46 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 14
+VisualStudioVersion = 14.0.25420.1
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "MeshWorks", "MeshWorks\MeshWorks.vcxproj", "{C867056F-D405-4E43-B088-8BE570EB6F2E}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "GLKernel", "GLKernel\GLKernel.vcxproj", "{D3ED3AA9-F85B-40C2-999D-23DD6153ECF4}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "GLKLib", "GLKLib\GLKLib.vcxproj", "{FA63F5B0-DF3B-484F-8224-295313535F03}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "MeshEntities", "MeshEntities\MeshEntities.vcxproj", "{373444AA-2EB2-4A43-9249-285DD2D35B7C}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "InteractiveTools", "InteractiveTools\InteractiveTools.vcxproj", "{42F3FEBA-F7A7-4BA7-8D99-8793F7BE1415}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Win32 = Debug|Win32
+		Release|Win32 = Release|Win32
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{C867056F-D405-4E43-B088-8BE570EB6F2E}.Debug|Win32.ActiveCfg = Debug|Win32
+		{C867056F-D405-4E43-B088-8BE570EB6F2E}.Debug|Win32.Build.0 = Debug|Win32
+		{C867056F-D405-4E43-B088-8BE570EB6F2E}.Release|Win32.ActiveCfg = Release|Win32
+		{C867056F-D405-4E43-B088-8BE570EB6F2E}.Release|Win32.Build.0 = Release|Win32
+		{D3ED3AA9-F85B-40C2-999D-23DD6153ECF4}.Debug|Win32.ActiveCfg = Debug|Win32
+		{D3ED3AA9-F85B-40C2-999D-23DD6153ECF4}.Debug|Win32.Build.0 = Debug|Win32
+		{D3ED3AA9-F85B-40C2-999D-23DD6153ECF4}.Release|Win32.ActiveCfg = Release|Win32
+		{D3ED3AA9-F85B-40C2-999D-23DD6153ECF4}.Release|Win32.Build.0 = Release|Win32
+		{FA63F5B0-DF3B-484F-8224-295313535F03}.Debug|Win32.ActiveCfg = Debug|Win32
+		{FA63F5B0-DF3B-484F-8224-295313535F03}.Debug|Win32.Build.0 = Debug|Win32
+		{FA63F5B0-DF3B-484F-8224-295313535F03}.Release|Win32.ActiveCfg = Release|Win32
+		{FA63F5B0-DF3B-484F-8224-295313535F03}.Release|Win32.Build.0 = Release|Win32
+		{373444AA-2EB2-4A43-9249-285DD2D35B7C}.Debug|Win32.ActiveCfg = Debug|Win32
+		{373444AA-2EB2-4A43-9249-285DD2D35B7C}.Debug|Win32.Build.0 = Debug|Win32
+		{373444AA-2EB2-4A43-9249-285DD2D35B7C}.Release|Win32.ActiveCfg = Release|Win32
+		{373444AA-2EB2-4A43-9249-285DD2D35B7C}.Release|Win32.Build.0 = Release|Win32
+		{42F3FEBA-F7A7-4BA7-8D99-8793F7BE1415}.Debug|Win32.ActiveCfg = Debug|Win32
+		{42F3FEBA-F7A7-4BA7-8D99-8793F7BE1415}.Debug|Win32.Build.0 = Debug|Win32
+		{42F3FEBA-F7A7-4BA7-8D99-8793F7BE1415}.Release|Win32.ActiveCfg = Release|Win32
+		{42F3FEBA-F7A7-4BA7-8D99-8793F7BE1415}.Release|Win32.Build.0 = Release|Win32
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal
