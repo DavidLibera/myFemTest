@@ -97,7 +97,7 @@ BEGIN_MESSAGE_MAP(CMainFrame, CFrameWnd)
 	ON_COMMAND(ID_MODIFICATION_SMOOTHBOUNDARYSURFACE, &CMainFrame::OnModificationSmoothboundarysurface)
 	ON_COMMAND(ID_IMPORT_HEXFILES, &CMainFrame::OnImportHexfiles)
 	ON_COMMAND(ID_EXPORT_HEXFILES, &CMainFrame::OnExportHexfiles)
-	ON_COMMAND(ID_MESHOPERATION_FEA, &CMainFrame::OnMeshoperationFea)
+	ON_COMMAND(ID_MESHOPERATION_FEA, &CMeshWorksApp::OnAppFEA)
 END_MESSAGE_MAP()
 
 static UINT indicators[] =
@@ -1976,14 +1976,4 @@ void CMainFrame::OnExportHexfiles()
 		printf("%s exported\n", cFile.GetFileName());
 		AfxGetApp()->EndWaitCursor();
 	}
-}
-
-
-void CMainFrame::OnMeshoperationFea()
-{
-	// TODO: Add your command handler code here
-	//MessageBox(_T("Hello"));
-	CMeshWorksApp* pApp;
-	pApp ->OnAppFEA();
-
 }

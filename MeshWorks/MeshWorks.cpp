@@ -17,6 +17,7 @@
 
 BEGIN_MESSAGE_MAP(CMeshWorksApp, CWinApp)
 	ON_COMMAND(ID_APP_ABOUT, &CMeshWorksApp::OnAppAbout)
+	ON_COMMAND(IDD_FEA, &CMeshWorksApp::OnAppFEA)
 	// Standard file based document commands
 	ON_COMMAND(ID_FILE_NEW, &CWinApp::OnFileNew)
 	ON_COMMAND(ID_FILE_OPEN, &CWinApp::OnFileOpen)
@@ -98,47 +99,6 @@ BOOL CMeshWorksApp::InitInstance()
 
 // CAboutDlg dialog used for App About
 
-class CFEADlg : public CDialog
-{
-public:
-	CFEADlg();
-
-// Dialog Data
-	enum { IDD = IDD_FEA };
-
-protected:
-	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV support
-
-// Implementation
-protected:
-	DECLARE_MESSAGE_MAP()
-public:
-	afx_msg void OnBnClickedSelectbcs();
-};
-
-CFEADlg::CFEADlg() : CDialog(CFEADlg::IDD)
-{
-}
-
-void CFEADlg::DoDataExchange(CDataExchange* pDX)
-{
-	CDialog::DoDataExchange(pDX);
-}
-
-BEGIN_MESSAGE_MAP(CFEADlg, CDialog)
-	ON_BN_CLICKED(IDC_SELECTBCS, &CFEADlg::OnBnClickedSelectbcs)
-END_MESSAGE_MAP()
-
-// App command to run the dialog
-void CMeshWorksApp::OnAppFEA()
-{
-	CFEADlg FEADlg;
-	FEADlg.DoModal();
-}
-
-
-// CAboutDlg dialog used for App About
-
 class CAboutDlg : public CDialog
 {
 public:
@@ -172,6 +132,47 @@ void CMeshWorksApp::OnAppAbout()
 {
 	CAboutDlg aboutDlg;
 	aboutDlg.DoModal();
+}
+
+
+// CFEADlg dialog
+
+class CFEADlg : public CDialog
+{
+public:
+	CFEADlg();
+
+	// Dialog Data
+	enum { IDD = IDD_FEA };
+
+protected:
+	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV support
+
+														// Implementation
+protected:
+	DECLARE_MESSAGE_MAP()
+public:
+	afx_msg void OnBnClickedSelectbcs();
+};
+
+CFEADlg::CFEADlg() : CDialog(CFEADlg::IDD)
+{
+}
+
+void CFEADlg::DoDataExchange(CDataExchange* pDX)
+{
+	CDialog::DoDataExchange(pDX);
+}
+
+BEGIN_MESSAGE_MAP(CFEADlg, CDialog)
+	ON_BN_CLICKED(IDC_SELECTBCS, &CFEADlg::OnBnClickedSelectbcs)
+END_MESSAGE_MAP()
+
+// App command to run the dialog
+void CMeshWorksApp::OnAppFEA()
+{
+	CFEADlg FEADlg;
+	FEADlg.DoModal();
 }
 
 
