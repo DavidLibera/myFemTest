@@ -8,6 +8,7 @@
 #include "MeshWorksDoc.h"
 #include "MeshWorksView.h"
 #include "ControlPanel.h"
+#include "FEM.h"
 
 
 
@@ -1978,6 +1979,7 @@ void CMainFrame::OnExportHexfiles()
 	}
 }
 
+//-----------------------------------------------------------------------------------------------------------------
 
 // FEM Implementation
 
@@ -2004,7 +2006,7 @@ void CMainFrame::PrintInfo() {
 	std::cout << "Coordinates:" << yy << std::endl;
 	std::cout << "Coordinates:" << zz << std::endl;
 	}
-	*/
+
 	std::cout << "-----------------------------------------------------------------" << std::endl;
 
 	CMeshWorksDoc *pDoc = (CMeshWorksDoc *)(GetActiveDocument());
@@ -2032,6 +2034,28 @@ void CMainFrame::PrintInfo() {
 	}
 
 	// Printing values out
+	*/
+	//FEM* myFEM = new FEM;
 
+	//myFEM->setProps();
+	//myFEM->setNodeMatrix();
+
+	//delete myFEM;
+	std::cout << "PrintInfo()" << std::endl;
 	std::cout << "-----------------------------------------------------------------" << std::endl;
+}
+
+void CMainFrame::OnClickSetProps() {
+	// User inputs t,E,v values for FEM 
+	// CMainFrame uses pFEM to access and set these values
+	//myFEM->setProps(t, E, v);
+	std::cout << "setting properties" << std::endl;
+
+}
+
+void CMainFrame::OnClickSetBCs() {
+	// User inputs t,E,v values for FEM 
+	// CMainFrame uses pFEM to access and set these values
+	//myFEM->setProps(t, E, v);
+	std::cout << "setting BCS" << std::endl;
 }

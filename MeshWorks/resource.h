@@ -21,6 +21,7 @@
 #define IDC_SELECTBCS                   1002
 #define IDC_BUTTON2                     1003
 #define IDC_DELETEPT2                   1003
+#define IDC_SETPROPS                    1003
 #define IDC_BUTTON3                     1004
 #define IDC_PT_SIZE                     1007
 #define IDC_VIEW_PROPERTIES             1008

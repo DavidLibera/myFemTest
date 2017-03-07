@@ -10,6 +10,7 @@ class QMeshPatch;
 class QMeshNode;
 class CMeshWorksView;
 class CControlPanel;
+class FEM;
 
 
 class CMainFrame : public CFrameWnd
@@ -115,7 +116,11 @@ public:
 	afx_msg void OnModificationSmoothboundarysurface();
 	afx_msg void OnImportHexfiles();
 	afx_msg void OnExportHexfiles();
+
+	// FEM Implementation
 	afx_msg void PrintInfo();
+	afx_msg void OnClickSetProps();
+	afx_msg void OnClickSetBCs();
 };
 
 

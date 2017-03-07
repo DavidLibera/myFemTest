@@ -113,6 +113,8 @@
   <ItemGroup>
     <ClCompile Include="ControlPanel.cpp" />
     <ClCompile Include="DlgCrossSection.cpp" />
+    <ClCompile Include="FEAPanel.cpp" />
+    <ClCompile Include="FEM.cpp" />
     <ClCompile Include="MainFrm.cpp" />
     <ClCompile Include="MeshWorks.cpp" />
     <ClCompile Include="MeshWorksDoc.cpp" />
@@ -125,6 +127,8 @@
   <ItemGroup>
     <ClInclude Include="ControlPanel.h" />
     <ClInclude Include="DlgCrossSection.h" />
+    <ClInclude Include="FEAPanel.h" />
+    <ClInclude Include="FEM.h" />
     <ClInclude Include="MainFrm.h" />
     <ClInclude Include="MeshWorks.h" />
     <ClInclude Include="MeshWorksDoc.h" />

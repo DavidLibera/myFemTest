@@ -1,6 +1,6 @@
 #pragma once
 #include "afxwin.h"
-
+#include <stdio.h>
 
 // CControlPanel form view
 
@@ -29,11 +29,8 @@ public:
 	//CEdit m_LogWindow;
 	void SetLogWindowText(CString str);
 	virtual void OnInitialUpdate();
-	afx_msg void OnBnClickedConstruct();
 
 	CEdit m_ptSize;
 	afx_msg void OnBnClickedChange();
 	CEdit m_LogWindow;
 };
-
-
