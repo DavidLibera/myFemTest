@@ -115,6 +115,7 @@ public:
 	afx_msg void OnModificationSmoothboundarysurface();
 	afx_msg void OnImportHexfiles();
 	afx_msg void OnExportHexfiles();
+	afx_msg void PrintInfo();
 };
 
 

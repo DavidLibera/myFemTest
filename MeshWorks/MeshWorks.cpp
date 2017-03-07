@@ -182,8 +182,11 @@ void CMeshWorksApp::OnAppFEA()
 
 void CFEADlg::OnBnClickedSelectbcs()
 {
-	// TODO: Add your control notification handler code here
+	AfxGetApp()->BeginWaitCursor();
+	CMainFrame *pWnd = (CMainFrame *)(AfxGetMainWnd());
 
-	//Here I will need to get view and select the nodes which will have zero bc 
-
+	// CMainFrame's function to print information
+	pWnd->PrintInfo();
+	
+	AfxGetApp()->EndWaitCursor();
 }
