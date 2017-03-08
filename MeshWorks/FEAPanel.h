@@ -30,5 +30,6 @@ public:
 	afx_msg void OnBnClickedSelectbcs();
 	afx_msg void OnBnClickedSetprops();
 
+	afx_msg void OnBnClickedAnalyze();
 };
 

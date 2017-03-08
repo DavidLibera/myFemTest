@@ -6,6 +6,10 @@
 #include "FEM.h"
 #include <iostream>
 
+//added for ensuring OnAppFEA is not run unless 
+#include "MeshWorksDoc.h"
+#include "stdafx.h"
+
 CFEADlg::CFEADlg() : CDialog(CFEADlg::IDD)
 {
 	std::cout << "CONSTRUCTOR: Dyn Alloc Space for class FEM" << std::endl;
@@ -26,11 +30,17 @@ void CFEADlg::DoDataExchange(CDataExchange* pDX)
 BEGIN_MESSAGE_MAP(CFEADlg, CDialog)
 	ON_BN_CLICKED(IDC_SELECTBCS, &CFEADlg::OnBnClickedSelectbcs)
 	ON_BN_CLICKED(IDC_SETPROPS, &CFEADlg::OnBnClickedSetprops)
+	ON_BN_CLICKED(IDC_ANALYZE, &CFEADlg::OnBnClickedAnalyze)
 END_MESSAGE_MAP()
 
 // App command to run the dialog
 void CMeshWorksApp::OnAppFEA()
 {
+	// TO DO:
+	// Bug : when User clicks on FEA from Menu and no mesh imported it crashes 
+	// Need to make sure file is loaded before DoModal because it crashes
+	// Dyn memory is not deallocated !! Bad. 
+
 	CFEADlg FEADlg;
 	FEADlg.DoModal();
 }
@@ -67,3 +77,10 @@ void CFEADlg::OnBnClickedSetprops()
 	std::cout << "CFEADlg::OnBnClickedSetprops" << std::endl;
 }
 
+
+
+void CFEADlg::OnBnClickedAnalyze()
+{
+	// TODO: Add your control notification handler code here
+	pFEM->MainFunction();
+}

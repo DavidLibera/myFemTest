@@ -535,6 +535,7 @@ BEGIN
     PUSHBUTTON      "Cancel",IDCANCEL,252,155,50,14
     PUSHBUTTON      "Select Boundary Conditions",IDC_SELECTBCS,89,46,133,14
     PUSHBUTTON      "Set Properties",IDC_SETPROPS,129,25,50,14
+    PUSHBUTTON      "Analyze",IDC_ANALYZE,133,101,50,14
 END
 
 
