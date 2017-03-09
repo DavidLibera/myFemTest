@@ -188,7 +188,7 @@ void FEM::computeKMatrix() {
 		scatter(Ke, K, n1, n2, n3);
 
 	}
-
+	
 	PrintMatrix(K, Krow, Kcol);
 
 }
