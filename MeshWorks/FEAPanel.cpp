@@ -31,6 +31,7 @@ BEGIN_MESSAGE_MAP(CFEADlg, CDialog)
 	ON_BN_CLICKED(IDC_SELECTBCS, &CFEADlg::OnBnClickedSelectbcs)
 	ON_BN_CLICKED(IDC_SETPROPS, &CFEADlg::OnBnClickedSetprops)
 	ON_BN_CLICKED(IDC_ANALYZE, &CFEADlg::OnBnClickedAnalyze)
+	ON_BN_CLICKED(IDC_BUTTON4, &CFEADlg::OnBnClickedButton4)
 END_MESSAGE_MAP()
 
 // App command to run the dialog
@@ -83,4 +84,11 @@ void CFEADlg::OnBnClickedAnalyze()
 {
 	// TODO: Add your control notification handler code here
 	pFEM->MainFunction();
+}
+
+
+void CFEADlg::OnBnClickedButton4()
+{
+	// TODO: Add your control notification handler code here
+	pFEM->colorFaces();
 }

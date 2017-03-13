@@ -13,6 +13,8 @@
 
 #include "..\ANN\ANN.h"
 
+#include <vector> // useful for BCs
+
 
 // Member functions of class FEM 
 
@@ -64,6 +66,8 @@ void FEM::PrintVector(double* &a, int row) {
 	}
 	std::cout << "-------------------------------" << std::endl;
 }
+
+
 
 // Setting
 void FEM::setProps() {
@@ -128,9 +132,36 @@ void FEM::setDMatrix() {
 }
 
 void FEM::setBCs() {
+
+	//std::vector<int> vDOF(nDOF); 
+	//std::vector<int> vConstr(5); // user defined
+	//std::vector<int> vUnconstr(nDOF-5);  // depends on user defined
+
+	//// create vector of 1 to 18 
+	//for (int i = 1; i <= 18; i++) vDOF.push_back(i);
+
+	//// create vector of vConstr (USER-DEFINED)
+	//std::cout << "Enter rows that are constrained:" << std::endl;
+	//for (int i = 0; i < vConstr.size(); i++) {
+	//	int x;
+	//	std::cin >> x; 
+	//	vConstr.push_back(x);
+	//	std::cout << "--next--" << std::endl;
+	//}
+
+	//// set_intersection algorithm
+	//std::vector<int>::iterator it;
+	//std::vector<int> vstore;
+
+	//it = std::set_intersection(v); //this is used on array
+
+	
+
 	Isol[0][0] = 1; Isol[0][1] = 3; Isol[0][2] = 4;
 	f[3] = -1225; // Fy at node 2 is 1225 
 }
+
+
 
 // Computing
 
@@ -375,6 +406,8 @@ double FEM::computeVonMises() {
 	return sqrt( (pow((sige[0] - sige[1]), 2) + pow(sige[0], 2) + pow(sige[1], 2) + 6 * pow(sige[2], 2))/2);
 }
 
+
+
 // Getting 
 int FEM::getNumberOfNodes() {
 	CMainFrame *pWnd = (CMainFrame *)(AfxGetMainWnd());
@@ -520,5 +553,5 @@ void FEM::MainFunction() {
 
 // Post-processing
 void FEM::colorFaces() {
-
+	std::cout << "colorFaces" << std::endl;
 }
