@@ -26,9 +26,9 @@ public:
 	// Computing
 	void computeKMatrix();
 	void scatter(double** &Ke, double** &K, int n1, int n2, int n3);
-	void scatterKmod(double** &K, double** &Kmod, double** &Isol);
-	void scatterfmod(double* &f, double* &fmod, double** &Isol);
-	void scatterBackDisplacements(double* &dmod, double* &d, double** &Isol);
+	void scatterKmod(double** &K, double** &Kmod);
+	void scatterfmod(double* &f, double* &fmod);
+	void scatterBackDisplacements(double* &dmod, double* &d);
 	void computeStress();
 	double computeVonMises();
 
@@ -41,6 +41,8 @@ public:
 	void Destroy();
 	void CreateVector(double* &ptr, int ptrsize);
 	void DeleteVector(double* &ptr);
+	void CreateVectorIsol(int* &ptr, int ptrsize);
+	void DeleteVectorIsol(int* &ptr);
 
 	// PostProcessing
 	void colorFaces();
@@ -64,11 +66,12 @@ public:
 	double** K; int Krow = nDOF, Kcol = nDOF;
 	double** Ke; int Kerow = 6, Kecol = 6;
 
-	// Matrices/Vectors for solving systems 
-	double** Isol; int Isolrow = 1, Isolcol =3; // THESE DIMENSIONS AFFECT THE NEXT MOD MATRICES for general case
-	double** Kmod; int Kmodrow = 3, Kmodcol = 3;
-	double* fmod; int fmodrow = 3;
-	double* dmod; int dmodrow = 3;
+	// Matrices/Vectors for solving systems
+	int vars = nDOF-5; // unknowns
+	int* Isol; int Isolrow = vars; // THESE DIMENSIONS AFFECT THE NEXT MOD MATRICES for general case
+	double** Kmod; int Kmodrow = vars, Kmodcol = vars;
+	double* fmod; int fmodrow = vars;
+	double* dmod; int dmodrow = vars;
 
 	//Matrices/Vectors for stress strain elemental
 	double* sige; int sigerow = 3; // sige = stress element 

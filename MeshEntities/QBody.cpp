@@ -240,6 +240,77 @@ void QBody::drawShade()
 	//glDepthMask(GL_TRUE);
 }
 
+void QBody::drawShade2(float rr, float gg, float bb, float alpha)
+{
+	if (GetAttribFlag(5))
+		return;
+
+
+	for (GLKPOSITION Pos = Patch->GetTrglFaceList().GetHeadPosition(); Pos != NULL;)
+	{
+		QMeshFace *temp = (QMeshFace *)(Patch->GetTrglFaceList().GetNext(Pos));
+
+		//if (!temp->selected) continue;
+		if (temp->inner) continue;
+
+		int i = temp->GetEdgeNum();
+		glPolygonMode(GL_FRONT, GL_FILL);
+		//glEnable(GL_BLEND);
+		//glEnable(GL_CULL_FACE);
+		//glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+		//glEnable(GL_DEPTH_TEST);
+		//glDepthMask(GL_FALSE);
+		//glEnable(GL_BLEND);
+		//glBlendFunc(GL_ONE_MINUS_SRC_ALPHA,GL_SRC_ALPHA);
+
+		//rr=0.75f; gg=0.592f; bb=0.498f;
+
+		//added for color display
+		if (temp->m_nIdentifiedPatchIndex >= 0) {
+			ChangeValueToColor(temp->m_nIdentifiedPatchIndex, rr, gg, bb);
+			//alpha=1.0;
+		}
+
+		if (temp->selected) {
+			rr = 0.5; gg = 0.5; bb = 1;
+		}
+
+		//glColor4f(rr, gg, bb, alpha);
+		//end color
+
+		glBegin(GL_POLYGON);
+		QMeshNode *node[MAX_EDGE_NUM];
+		for (int j = 0; j < i; j++)
+		{
+			double x, y, z;
+			double nx, ny, nz;
+			double dd;
+			node[j] = temp->GetNodeRecordPtr(j + 1);
+			//double x,y,z;
+			//double nx,ny,nz;
+
+			//node[j]->GetNormal(nx,ny,nz);
+			node[j]->GetCoord3D(x, y, z);
+
+			if (temp->i_inner)
+				temp->GetPlaneEquation(nx, ny, nz, dd);
+			else {
+				if (shadenormal == 0)
+					node[j]->GetNormal(nx, ny, nz);
+				else temp->GetPlaneEquation(nx, ny, nz, dd);
+			}
+			// for flat shading
+			glColor4f(rr, gg, bb, alpha);
+			glNormal3d(nx, ny, nz);
+			glVertex3d(x, y, z);
+		}
+		glEnd();
+	}
+	//glDisable(GL_BLEND);
+	//glDepthMask(GL_TRUE);
+}
+
 void QBody::drawProfile()
 {
 //	if (m_wovenModel && GetAttribFlag(7)) drawWovenModel();

@@ -50,17 +50,8 @@ void CMeshWorksApp::OnAppFEA()
 // CMeshWorksApp message handlers
 void CFEADlg::OnBnClickedSelectbcs()
 {
-	/*
-	//AfxGetApp()->BeginWaitCursor();
-	CMainFrame *pWnd = (CMainFrame *)(AfxGetMainWnd());
-
-	//CMainFrame's function to print information
-	pWnd->OnClickSetBCs();
-
-	//AfxGetApp()->EndWaitCursor();
-	*/
-	std::cout << "Printing Coordinates with class FEM function" << std::endl;
-	pFEM->printNodeCoord();
+	std::cout << "Setting boundaries conditions" << std::endl;
+	//pFEM->setBCs(); WONT WORK YET, because Create() is called in MainFunction()
 }
 
 void CFEADlg::OnBnClickedSetprops()

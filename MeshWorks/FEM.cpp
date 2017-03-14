@@ -154,14 +154,19 @@ void FEM::setBCs() {
 	//std::vector<int> vstore;
 
 	//it = std::set_intersection(v); //this is used on array
+	//int c = 0;
+	//for (int i = 1; i <= 18; i++) {
+	//	if (i != 2 && i != 13 && i != 14 && i != 17 && i != 18) {
+	//		Isol[c] = i;
+	//		c = c + 1;
+	//	}
+	//}
+	//f[5] = -1225; // Fy at node 3 is 1225 
 
-	
+	Isol[0] = 1; Isol[1] = 3; Isol[2] = 4; // 4 node case
+	f[3]=-1225;
 
-	Isol[0][0] = 1; Isol[0][1] = 3; Isol[0][2] = 4;
-	f[3] = -1225; // Fy at node 2 is 1225 
 }
-
-
 
 // Computing
 
@@ -275,33 +280,23 @@ void FEM::scatter(double** &Ke, double** &K, int n1, int n2, int n3) {
 
 }
 
-void FEM::scatterKmod(double** &K, double** &Kmod, double** &Isol) {
+void FEM::scatterKmod(double** &K, double** &Kmod) {
 
 	// WARNING: IT IS NOT GENERAL ONLY FOR 4 node case 
 
 	// Entries of Isol represent rows and cols that will be extracted
-	int n = 3; //sizeof(Isol[0]) / sizeof(Isol[0][0]);
-	std::cout << "n:(for scatterKmod)" << n << std::endl;
+	int n = vars;
+
 	int row, col;
 
 	//Creating Kmod 
 	for (int i = 0; i < n; i++) {
-		
-		// safety switch 
-		if (i == 10) break;
-		
-		switch (i) {
-			case 0: row = Isol[0][0]-1; break;
-			case 1: row = Isol[0][1]-1; break;
-			case 2: row = Isol[0][2]-1; break;
-		}
+
+		row = Isol[i] - 1;
+
 		for (int j = 0; j < n; j++) {
 
-			switch (j) {
-				case 0: col = Isol[0][0]-1; break;
-				case 1: col = Isol[0][1]-1; break;
-				case 2: col = Isol[0][2]-1; break;
-			}
+			col = Isol[j] - 1;
 
 			Kmod[i][j] = K[row][col];
 
@@ -311,44 +306,33 @@ void FEM::scatterKmod(double** &K, double** &Kmod, double** &Isol) {
 
 }
 
-void FEM::scatterfmod(double* &f, double* &fmod, double** &Isol) {
+void FEM::scatterfmod(double* &f, double* &fmod) {
 
 	// WARNING! : Only valid for 4 nodes 
 
-	int n = 3; // n is the number of columns in Isol 
+	int n = vars;
+	
 	int row;
 
 	for (int i = 0; i < n; i++) {
 
-		// safety switch 
-		if (i == 10) break;
+		row = Isol[i] - 1;
 
-		switch (i) {
-		case 0: row = Isol[0][0] - 1; break;
-		case 1: row = Isol[0][1] - 1; break;
-		case 2: row = Isol[0][2] - 1; break;
-		}
 		fmod[i] = f[row];
 	}
 }
 
-void FEM::scatterBackDisplacements(double* &dmod, double* &d, double** &Isol) {
+void FEM::scatterBackDisplacements(double* &dmod, double* &d) {
 
 	// WARNING! : Only valid for 4 nodes 
 
-	int n = 3; // n is the number of columns in Isol 
+	int n = vars; // n is the number of columns in Isol 
 	int row;
 
 	for (int i = 0; i < n; i++) {
 
-		// safety switch 
-		if (i == 10) break;
+		row = Isol[i] - 1;
 
-		switch (i) {
-		case 0: row = Isol[0][0] - 1; break;
-		case 1: row = Isol[0][1] - 1; break;
-		case 2: row = Isol[0][2] - 1; break;
-		}
 		d[row] = dmod[i];
 	}
 }
@@ -394,6 +378,10 @@ void FEM::computeStress() {
 		GLKMatrixLib::Mul(temp2, de, 3, 6, sige);
 
 		double vonMises = computeVonMises();
+		
+		//Print stresses
+		std::cout << "vonMises of element:" << element << "is " << vonMises << std::endl;
+		PrintVector(sige,sigerow);
 
 	}
 
@@ -459,7 +447,7 @@ void FEM::Create() {
 	GLKMatrixLib::CreateMatrix(Ke, Kerow, Kecol);
 
 	// Solving System of Equations
-	GLKMatrixLib::CreateMatrix(Isol, Isolrow, Isolcol);
+	CreateVectorIsol(Isol, Isolrow);
 	GLKMatrixLib::CreateMatrix(Kmod, Kmodrow, Kmodcol);
 	CreateVector(fmod, fmodrow);
 	CreateVector(dmod, dmodrow);
@@ -488,7 +476,7 @@ void FEM::Destroy() {
 	GLKMatrixLib::DeleteMatrix(Ke, Kerow, Kecol);
 	
 	// Solving system of equations
-	GLKMatrixLib::DeleteMatrix(Isol, Isolrow, Isolcol);
+	DeleteVectorIsol(Isol);
 	GLKMatrixLib::DeleteMatrix(Kmod, Kmodrow, Kmodcol);
 	DeleteVector(fmod);
 	DeleteVector(dmod);
@@ -514,6 +502,16 @@ void FEM::DeleteVector(double* &ptr) {
 	delete[] ptr; 
 }
 
+void FEM::CreateVectorIsol(int* &ptr, int ptrsize) {
+	ptr = new int[ptrsize];
+	for (int i = 0; i < ptrsize; i++) {
+		ptr[i] = 0;
+	}
+}
+
+void FEM::DeleteVectorIsol(int* &ptr) {
+	delete[] ptr;
+}
 
 
 // Main function 
@@ -535,15 +533,31 @@ void FEM::MainFunction() {
 	setBCs();
 
 	//Modify System of Equations based on BCs
-	scatterKmod(K, Kmod, Isol);
-	scatterfmod(f, fmod, Isol);
+	scatterKmod(K, Kmod);
+	scatterfmod(f, fmod);
+
+
+	std::cout << "Kmod" << std::endl;
+	PrintMatrix(Kmod, Kmodrow, Kmodcol);
+
+	std::cout << "fmod" << std::endl;
+	PrintVector(fmod, fmodrow);
 
 	//Solve system of equations
-	GLKMatrixLib::GaussSeidelSolver(Kmod, fmod, 3, dmod,1e-6);
-	scatterBackDisplacements(dmod, d, Isol);
+	bool doesSystemSolve = GLKMatrixLib::GaussSeidelSolver(Kmod, fmod, vars, dmod,1e-9);
+	
+	std::cout << "bool doesSystemSolve =" << doesSystemSolve << std::endl;
+	
+	scatterBackDisplacements(dmod, d);
+
+	std::cout << "dmod" << std::endl;
+	PrintVector(dmod, dmodrow);
+
+	std::cout << "d" << std::endl;
+	PrintVector(d, drow);
 
 	//Compute Stresses
-	computeStress();
+	//computeStress();
 	
 	// Deallocate memory before exiting
 	Destroy();
@@ -554,4 +568,24 @@ void FEM::MainFunction() {
 // Post-processing
 void FEM::colorFaces() {
 	std::cout << "colorFaces" << std::endl;
+
+	float rr = 0.85f, gg = 0.25f, bb = 0.25f, alpha = 0.9f;
+
+	CMainFrame *pWnd = (CMainFrame *)(AfxGetMainWnd());
+
+	CMeshWorksDoc *pDoc = (CMeshWorksDoc *)(pWnd->GetActiveDocument());
+	CGLKernelView *cView = pWnd->GetMainView()->GetGLKernelView();
+
+	QBody * body = (QBody*)(pDoc->m_meshList).GetHead();
+
+	body->drawShade2(rr, gg, bb, alpha);
+	//QMeshFace* pFace = (QMeshFace*)body->GetTrglFaceList().GetHead();
+
+	//int f = 0;
+	//for (GLKPOSITION Pos = body->GetTrglFaceList().GetHeadPosition(); Pos != NULL; ) {
+	//	pFace = (QMeshFace*)body->GetTrglFaceList().GetNext(Pos);
+	//	f = f + 1;
+	//}
+
+
 }
