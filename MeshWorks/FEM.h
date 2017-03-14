@@ -81,6 +81,7 @@ public:
 	double** BT;			int BTrow = Bcol, BTcol = Brow;
 	double**temp;			int trow = 6, tcol = 3;
 	double**temp2;          int t2row = 3, t2col = 6;
+	double* vonMisVec;      int vonMisVecrow = nFaces; 
 
 };
 

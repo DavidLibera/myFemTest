@@ -153,18 +153,19 @@ void FEM::setBCs() {
 	//std::vector<int>::iterator it;
 	//std::vector<int> vstore;
 
-	//it = std::set_intersection(v); //this is used on array
-	//int c = 0;
-	//for (int i = 1; i <= 18; i++) {
-	//	if (i != 2 && i != 13 && i != 14 && i != 17 && i != 18) {
-	//		Isol[c] = i;
-	//		c = c + 1;
-	//	}
-	//}
-	//f[5] = -1225; // Fy at node 3 is 1225 
+	//it = std::set_intersection(v); //this MAY be used on array for general case
 
-	Isol[0] = 1; Isol[1] = 3; Isol[2] = 4; // 4 node case
-	f[3]=-1225;
+	int c = 0;
+	for (int i = 1; i <= 18; i++) {
+		if (i != 2 && i != 13 && i != 14 && i != 17 && i != 18) {
+			Isol[c] = i;
+			c = c + 1;
+		}
+	}
+	f[5] = -1225; // Fy at node 3 is 1225 
+
+	//Isol[0] = 1; Isol[1] = 3; Isol[2] = 4; // 4 node case
+	//f[3]=-1225;
 
 }
 
@@ -377,8 +378,10 @@ void FEM::computeStress() {
 		GLKMatrixLib::Mul(D, B, 3, 3, 6, temp2);
 		GLKMatrixLib::Mul(temp2, de, 3, 6, sige);
 
+		// Store vonMises for drawShade function
 		double vonMises = computeVonMises();
-		
+		vonMisVec[element] = vonMises;
+
 		//Print stresses
 		std::cout << "vonMises of element:" << element << "is " << vonMises << std::endl;
 		PrintVector(sige,sigerow);
@@ -460,6 +463,7 @@ void FEM::Create() {
 	GLKMatrixLib::CreateMatrix(BT, BTrow, BTcol);
 	GLKMatrixLib::CreateMatrix(temp, trow, tcol);
 	GLKMatrixLib::CreateMatrix(temp2, t2row, t2col);
+	CreateVector(vonMisVec, vonMisVecrow);
 
 }
 
@@ -489,6 +493,7 @@ void FEM::Destroy() {
 	GLKMatrixLib::DeleteMatrix(BT, BTrow, BTcol);
 	GLKMatrixLib::DeleteMatrix(temp, trow, tcol);
 	GLKMatrixLib::DeleteMatrix(temp2, t2row, t2col);
+	DeleteVector(vonMisVec);
 }
 
 void FEM::CreateVector(double* &ptr, int ptrsize) {
@@ -516,16 +521,16 @@ void FEM::DeleteVectorIsol(int* &ptr) {
 
 // Main function 
 void FEM::MainFunction() {
-	
+
 	// Allocate required memory  
 	Create();
-	
+
 	// Do computations of matrix 
 	setProps();
 	setNodeMatrix();
 	setConnMatrix();
 	setDMatrix();
-	
+
 	//Compute K matrix
 	computeKMatrix();
 
@@ -544,20 +549,33 @@ void FEM::MainFunction() {
 	PrintVector(fmod, fmodrow);
 
 	//Solve system of equations
-	bool doesSystemSolve = GLKMatrixLib::GaussSeidelSolver(Kmod, fmod, vars, dmod,1e-9);
-	
-	std::cout << "bool doesSystemSolve =" << doesSystemSolve << std::endl;
-	
-	scatterBackDisplacements(dmod, d);
 
-	std::cout << "dmod" << std::endl;
-	PrintVector(dmod, dmodrow);
+	//bool doesSystemSolve = GLKMatrixLib::GaussSeidelSolver(Kmod, fmod, vars, dmod,1e-6);
+	bool doesSystemSolve = GLKMatrixLib::GaussJordanElimination(Kmod, vars, fmod);
+
+	std::cout << "bool doesSystemSolve =" << doesSystemSolve << std::endl;
+	//Note: in GaussJordan solver, b vector becomes the output vector hence fmod contains dmod solution
+	scatterBackDisplacements(fmod, d);
 
 	std::cout << "d" << std::endl;
 	PrintVector(d, drow);
 
 	//Compute Stresses
-	//computeStress();
+	computeStress();
+
+	//Normalize vonMisVec (first find max value, then divide all by it)
+	double maxVM = 0.0;
+	for (int i = 0; i < nFaces; i++) {
+		if (vonMisVec[i] > maxVM)
+			maxVM = vonMisVec[i];
+	}
+
+	for (int i = 0; i < nFaces; i++) {
+		vonMisVec[i] = vonMisVec[i] / maxVM;
+	}
+
+	//Print
+	PrintVector(vonMisVec, vonMisVecrow);
 	
 	// Deallocate memory before exiting
 	Destroy();
@@ -569,21 +587,22 @@ void FEM::MainFunction() {
 void FEM::colorFaces() {
 	std::cout << "colorFaces" << std::endl;
 
-	float rr = 0.85f, gg = 0.25f, bb = 0.25f, alpha = 0.9f;
+	//float rr = 0.85f, gg = 0.25f, bb = 0.25f, alpha = 0.9f;
 
 	CMainFrame *pWnd = (CMainFrame *)(AfxGetMainWnd());
-
 	CMeshWorksDoc *pDoc = (CMeshWorksDoc *)(pWnd->GetActiveDocument());
-	CGLKernelView *cView = pWnd->GetMainView()->GetGLKernelView();
+	//CGLKernelView *cView = pWnd->GetMainView()->GetGLKernelView();
 
 	QBody * body = (QBody*)(pDoc->m_meshList).GetHead();
 
-	body->drawShade2(rr, gg, bb, alpha);
-	//QMeshFace* pFace = (QMeshFace*)body->GetTrglFaceList().GetHead();
+	body->drawNode2();
+
+	//GLEntity* entity = (GLEntity*)body->GetTrglFaceList().GetHead();
 
 	//int f = 0;
 	//for (GLKPOSITION Pos = body->GetTrglFaceList().GetHeadPosition(); Pos != NULL; ) {
-	//	pFace = (QMeshFace*)body->GetTrglFaceList().GetNext(Pos);
+	//	entity = (GLEntity*)body->GetTrglFaceList().GetNext(Pos);
+	//	entity->
 	//	f = f + 1;
 	//}
 

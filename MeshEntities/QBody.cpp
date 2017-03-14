@@ -240,16 +240,17 @@ void QBody::drawShade()
 	//glDepthMask(GL_TRUE);
 }
 
-void QBody::drawShade2(float rr, float gg, float bb, float alpha)
+void QBody::drawShade2()
 {
 	if (GetAttribFlag(5))
 		return;
 
+	float rr = 0.2f, gg = 0.1f, bb = 0.2f, alpha = 0.9f;
 
 	for (GLKPOSITION Pos = Patch->GetTrglFaceList().GetHeadPosition(); Pos != NULL;)
 	{
 		QMeshFace *temp = (QMeshFace *)(Patch->GetTrglFaceList().GetNext(Pos));
-
+		
 		//if (!temp->selected) continue;
 		if (temp->inner) continue;
 
@@ -309,6 +310,9 @@ void QBody::drawShade2(float rr, float gg, float bb, float alpha)
 	}
 	//glDisable(GL_BLEND);
 	//glDepthMask(GL_TRUE);
+
+	rr = rr + 0.1; gg = gg + .05; bb = bb + 0.1;
+
 }
 
 void QBody::drawProfile()
@@ -491,6 +495,59 @@ void QBody::drawNode()
 	glEnd();
 }
 
+void QBody::drawNode2()
+{
+	if (GetAttribFlag(5)) return;
+
+	//glDisable(GL_LIGHTING);
+	glPointSize(m_ptSize);
+	//glPointSize(2.0);
+	//glColorMask(GL_TRUE,GL_TRUE,GL_TRUE,GL_TRUE);
+	//glColor3f(0.75,0.75,0.75);
+	//glEnable(GL_POINT_SMOOTH);
+	double x, y, z, nx, ny, nz;
+
+	//	bool test=false; int tom=0;
+	
+	float rr = 0, gg = 0, bb = 0;
+
+	glEnable(GL_POINT_SMOOTH);
+	glBegin(GL_POINTS);
+	for (GLKPOSITION Pos = Patch->GetTrglNodeList().GetHeadPosition(); Pos != NULL;)
+	{
+		QMeshNode *node = (QMeshNode *)(Patch->GetTrglNodeList().GetNext(Pos));
+
+		if (node->inner) continue;
+
+		//if (!test){
+		//	for (GLKPOSITION Pos1 = this->GetTrglEdgeList().GetHeadPosition(); Pos1!=NULL;){
+		//		QMeshEdge *edge = (QMeshEdge *)this->GetTrglEdgeList().GetNext(Pos1);
+		//		edge->inner=true;
+		//	}
+		//	for (GLKPOSITION Pos1 = node->GetTrglTetraList().GetHeadPosition(); Pos1!=NULL;){
+		//		QMeshTetra *tetra = (QMeshTetra *)node->GetTrglTetraList().GetNext(Pos1);
+		//		for (int i=1; i<=6; i++)
+		//			tetra->GetEdgeRecordPtr(i)->inner=false;
+		//	}
+		//	if (tom==2) test=true; else tom++;
+		//}
+
+
+		if (node->m_nIdentifiedPatchIndex >= 0)
+			ChangeValueToColor(node->m_nIdentifiedPatchIndex, rr, gg, bb);
+
+		glColor3f(rr, gg, bb);
+
+		node->GetNormal(nx, ny, nz);
+		node->GetCoord3D(x, y, z);
+		glNormal3d(nx, ny, nz);
+		glVertex3d(x, y, z);
+
+		rr = rr + 0.1; gg = gg + 0.2; bb = bb + 0.1;
+
+	}
+	glEnd();
+}
 
 void QBody::drawNodeNormal(const double &length)
 {

@@ -69,11 +69,12 @@ public:
 	//		FALSE - draw the mesh mode
 	int shadenormal; //0-node normal, 1-face normal
 	virtual void drawShade();
-	virtual void drawShade2(float rr, float gg, float bb, float alpha);
+	virtual void drawShade2();
 	virtual void drawProfile();
 	virtual void drawMesh();
 	virtual void drawPreMesh();
 	virtual void drawNode();
+	virtual void drawNode2();
 	virtual void drawNodeNormal(const double &length);
 
 	
