@@ -825,7 +825,11 @@ void CMainFrame::changePtSize(int model, const float& ptSize)
 	CMeshWorksDoc *pDoc=(CMeshWorksDoc *)GetActiveDocument();
 
 	for(POSITION Pos=(pDoc->m_meshList).GetHeadPosition();Pos!=NULL;) {
+
 		QBody *patch=(QBody *)((pDoc->m_meshList).GetNext(Pos));
+
+		std::cout <<"In changePtSize: what is patch pointing to? " << patch << std::endl;
+		
 		if (patch->m_ptSize != ptSize)
 		{
 			patch->m_ptSize = ptSize;
@@ -836,6 +840,127 @@ void CMainFrame::changePtSize(int model, const float& ptSize)
 	}
 }
 
+
+// FOR FEA
+void CMainFrame::ChangeColor(double* &vec, int vecRow)
+{
+	CMeshWorksDoc *pDoc = (CMeshWorksDoc *)GetActiveDocument();
+	GetMainView()->GetGLKernelView()->m_FEAON = true;
+
+	// array vec read succesfully
+	//for (int i = 0; i < vecRow; i++) {
+	//	std::cout << vec[i] << std::endl;
+	//}
+
+	// Acquiring max, min for color map using ChangeValueToColor
+	double vecMax=0.0, vecMin = vec[0];
+	for (int i = 0; i < vecRow; i++) {
+		if (vec[i] > vecMax) { vecMax = vec[i]; }
+		if (vec[i] < vecMin) { vecMin = vec[i]; }
+	}
+
+	// TESTING
+	std::cout << "vecMax is " << vecMax << std::endl;
+	std::cout << "vecMin is " << vecMin << std::endl;
+
+
+
+	// Need access to QBody through pointer
+	int red, green, blue;
+
+	for (POSITION Pos = (pDoc->m_meshList).GetHeadPosition(); Pos != NULL;) {
+
+		QBody *patch = (QBody *)((pDoc->m_meshList).GetNext(Pos));
+		
+		for (int i = 0; i < vecRow; i++) {
+
+			// ChangeValueToColor2(vecMax, vecMin, vec[i],red, green, blue); WORKS POORLY RANDOM COLORS EVERYWHERE
+			// getValueBetweenTwoFixedColors(vec[i], red, green, blue);    WORKS VERY POORLY HEAT MAP  http://www.andrewnoske.com/wiki/Code_-_heatmaps_and_color_gradients
+			patch->myVec[i][0] = vec[i]; // simplest and ok 
+			patch->myVec[i][1] = 0.0;// vec[i]; //green/ 255;
+			patch->myVec[i][2] = vec[i]; // blue / 255;
+
+			// TESTING 
+			//std::cout << patch->myVec[i] << std::endl;
+		}
+
+	}
+
+	// Need allocate memory, and populate myVec with vonMisesVec  
+	
+	// Note: DeletemyVec will take place in destructor of QBody???
+
+	
+		//safety counter 
+	//int c = 1;
+	//for (POSITION Pos = (pDoc->m_meshList).GetHeadPosition(); Pos != NULL;) {
+	//	QBody *patch = (QBody *)((pDoc->m_meshList).GetNext(Pos));
+
+	//	patch->drawShade2();
+
+	GetMainView()->GetGLKernelView()->refresh();
+	//	c = c + 1;
+	//	if (c == 20) { break; }
+
+	//}
+}
+
+// FOR FEA
+void CMainFrame::ChangeValueToColor2(double maxValue, double minValue, double Value,
+	float & nRed, float & nGreen, float & nBlue)
+{
+	if ((maxValue - minValue)<0.000000000001)
+	{
+		nRed = 0.0;
+		nGreen = 0.0;
+		nBlue = 1.0;
+		return;
+	}
+
+	double temp = (Value - minValue) / (maxValue - minValue);
+
+	if (temp>0.75)
+	{
+		nRed = 1;
+		nGreen = (float)(1.0 - (temp - 0.75) / 0.25);
+		if (nGreen<0) nGreen = 0.0f;
+		nBlue = 0;
+		return;
+	}
+	if (temp>0.5)
+	{
+		nRed = (float)((temp - 0.5) / 0.25);
+		nGreen = 1;
+		nBlue = 0;
+		return;
+	}
+	if (temp>0.25)
+	{
+		nRed = 0;
+		nGreen = 1;
+		nBlue = (float)(1.0 - (temp - 0.25) / 0.25);
+		return;
+	}
+	else
+	{
+		nRed = 0;
+		nGreen = (float)(temp / 0.25);
+		nBlue = 1;
+	}
+}
+
+// FOR FEA
+bool CMainFrame::getValueBetweenTwoFixedColors(float value, int &red, int &green, int &blue)
+{
+	int aR = 0;   int aG = 0; int aB = 255;  // RGB for our 1st color (blue in this case).
+	int bR = 255; int bG = 0; int bB = 0;    // RGB for our 2nd color (red in this case).
+
+	red = (float)(bR - aR) * value + aR;      // Evaluated as -255*value + 255.
+	green = (float)(bG - aG) * value + aG;      // Evaluates as 0.
+	blue = (float)(bB - aB) * value + aB;      // Evaluates as 255*value + 0.
+
+	return 1;
+}
 
 
 

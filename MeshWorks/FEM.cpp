@@ -20,6 +20,7 @@
 
 
 // Printing
+
 void FEM::printNodeCoord() {
 
 	// Need pWnd to access GetActiveDocument and GetMainView unlike in CMainFrame:: functions 
@@ -70,6 +71,7 @@ void FEM::PrintVector(double* &a, int row) {
 
 
 // Setting
+
 void FEM::setProps() {
 	std::cout << "FEM::setProps()" << std::endl;
 
@@ -155,19 +157,104 @@ void FEM::setBCs() {
 
 	//it = std::set_intersection(v); //this MAY be used on array for general case
 
+	// FOR General Mesh: I want Isol to store values index 1 to nDOF-1 which correspond to free constraints
+	// excluding index 0 and 1 which will be = 0 displacement 
+
+	// Check why it didn't work, maybe check ... int vars = nDOF-2; // unknowns
+
+	//int c = 0;
+	//for (int i = 1; i <= nDOF; i++) {
+	//	if (i != 1 && i != 2) {
+	//		Isol[c] = i;
+	//		c = c + 1;
+	//	}
+	//}
+	//f[8] = -1225; // Fy at node 3 is 1225
+	//f[9] = -1225;
+
+	// FOR 5x5 nodes nodes 50 DOF 
+	//int c = 0;
+	//for (int i = 1; i <= nDOF; i++) {
+	//	if (i != 2 && i != 25 && i != 26 && i != nDOF-1 && i != nDOF) {
+	//		Isol[c] = i;
+	//		c = c + 1;
+	//	}
+	//}
+	//f[8] = -1225; // Fy at node 3 is 1225 
+
+
+	// FOR GENERAL CASE
+
+	//DANGER (ONLY FOR SQUARE MESH) affected nodes and ONLY SELF MADE MESH will make sense
+	
+	//Y-displacement is zero at edge 
+	int DOF1 = sqrt(nNodes) * 2;
+	
+	// upper d = 0 
+	int DOF2 = (nNodes - sqrt(nNodes) + 1) * 2;		// NOTE: DANGER I AM ASSUMING nNodes is a square number
+	int DOF3 = (nNodes - sqrt(nNodes) + 1) * 2 - 1;
+	
+	// lower d = 0 
+	int DOF4 = 1;
+	int DOF5 = 2;
+
+	int FORCEDOF = nNodes * 2;
+
+	std::cout << "DOF1:" << DOF1 << std::endl;
+
+	std::cout << "DOF2:" << DOF2 << std::endl;
+
+	std::cout << "DOF3:" << DOF3 << std::endl;
+
+	std::cout << "DOF4:" << DOF4 << std::endl;
+
+	std::cout << "DOF5:" << DOF5 << std::endl;
+
+	std::cout << "FORCE DOF:" << FORCEDOF << std::endl;
+
+
+
 	int c = 0;
-	for (int i = 1; i <= 18; i++) {
-		if (i != 2 && i != 13 && i != 14 && i != 17 && i != 18) {
+	for (int i = 1; i <= nDOF; i++) {
+		if (i != DOF1 && i != DOF2 && i != DOF3 && i != DOF4 && i != DOF5) {
 			Isol[c] = i;
 			c = c + 1;
 		}
 	}
-	f[5] = -1225; // Fy at node 3 is 1225 
+	//NOTE: I need to indent this one -1
+	f[FORCEDOF-1] = -1225; // Fy at node 3 is 1225 
 
+
+
+
+
+	// FOR 9 nodes 18 DOF
+	//std::cout << "if (i != 2 && i != 13 && i != 14 && i != 17 && i != 18) {" << std::endl;
+	//int c = 0;
+	//for (int i = 1; i <= nDOF; i++) {
+	//	if (i != 2 && i != 13 && i != 14 && i != 17 && i != 18) {
+	//		Isol[c] = i;
+	//		c = c + 1;
+	//	}
+	//}
+	//f[5] = -1225; // Fy at node 3 is 1225 
+
+	// FOR 9 nodes 18 DOF (arbitrary) 
+	//int c = 0;
+	//for (int i = 1; i <= nDOF; i++) {
+	//	if (i != 1 && i != 2 && i != 3 && i != 4 && i != 18) {
+	//		Isol[c] = i;
+	//		c = c + 1;
+	//	}
+	//}
+	//f[14] = -1225; // Fy at node 3 is 1225 
+
+	// FOR 4 nodes 8 DOF
 	//Isol[0] = 1; Isol[1] = 3; Isol[2] = 4; // 4 node case
-	//f[3]=-1225;
+	//f[3] = -1225;
 
 }
+
 
 // Computing
 
@@ -242,6 +329,67 @@ void FEM::computeKMatrix() {
 	}
 
 }
+
+void FEM::computeStress() {
+
+	int n1, n2, n3;
+	double b1, b2, b3, c1, c2, c3, x1, x2, x3, y1, y2, y3, A;
+
+	for (int element = 0; element < nFaces; element++) {
+		n1 = matConn[element][0];
+		n2 = matConn[element][1];
+		n3 = matConn[element][2];
+
+		de[0] = d[2 * n1 - 2];
+		de[1] = d[2 * n1 - 1];
+		de[2] = d[2 * n2 - 2];
+		de[3] = d[2 * n2 - 1];
+		de[4] = d[2 * n3 - 2];
+		de[5] = d[2 * n3 - 1];
+
+		// RECOMPUTE B MATRIX 
+		// Using node number from above to access x,y coordinates (Note: index starts is 1 less for matrices, hence the -1)
+		x1 = matNodes[n1 - 1][0]; y1 = matNodes[n1 - 1][1];
+		x2 = matNodes[n2 - 1][0]; y2 = matNodes[n2 - 1][1];
+		x3 = matNodes[n3 - 1][0]; y3 = matNodes[n3 - 1][1];
+
+		// Computing area of element
+		A = 0.5*((x2*y3 - x3*y2) + (x3*y1 - x1*y3) + (x1*y2 - x2*y1)); // needs an absolute sign
+
+																	   // Computing elements of matrix B
+		b1 = y2 - y3; b2 = y3 - y1; b3 = y1 - y2;
+		c1 = x3 - x2; c2 = x1 - x3; c3 = x2 - x1;
+
+		// Setting matrix B 
+		B[0][0] = b1 / (2 * A); B[0][2] = b2 / (2 * A); B[0][4] = b3 / (2 * A);
+		B[1][1] = c1 / (2 * A); B[1][3] = c2 / (2 * A); B[1][5] = c3 / (2 * A);
+		B[2][1] = b1 / (2 * A); B[2][3] = b2 / (2 * A); B[2][5] = b3 / (2 * A);
+		B[2][0] = c1 / (2 * A); B[2][2] = c2 / (2 * A); B[2][4] = c3 / (2 * A);
+
+		// Computing Stress
+		GLKMatrixLib::Mul(D, B, 3, 3, 6, temp2);
+		GLKMatrixLib::Mul(temp2, de, 3, 6, sige);
+
+		// Store vonMises for drawShade function
+		double vonMises = computeVonMises();
+		vonMisVec[element] = vonMises;
+
+		//Print stresses
+		//std::cout << "vonMises of element:" << element << "is " << vonMises << std::endl;
+		//PrintVector(sige, sigerow);
+
+	}
+
+}
+
+double FEM::computeVonMises() {
+
+	// For 2D problems only
+
+	return sqrt((pow((sige[0] - sige[1]), 2) + pow(sige[0], 2) + pow(sige[1], 2) + 6 * pow(sige[2], 2)) / 2);
+}
+
+// Scattering
 
 void FEM::scatter(double** &Ke, double** &K, int n1, int n2, int n3) {
 
@@ -338,68 +486,12 @@ void FEM::scatterBackDisplacements(double* &dmod, double* &d) {
 	}
 }
 
-void FEM::computeStress() {
 
-	int n1, n2, n3;
-	double b1, b2, b3, c1, c2, c3, x1, x2, x3, y1, y2, y3,A;
-
-	for (int element = 0; element < nFaces; element++) {
-		n1 = matConn[element][0];
-		n2 = matConn[element][1];
-		n3 = matConn[element][2];
-
-		de[0] = d[2 * n1 - 2];
-		de[1] = d[2 * n1 - 1];
-		de[2] = d[2 * n2 - 2];
-		de[3] = d[2 * n2 - 1];
-		de[4] = d[2 * n3 - 2];
-		de[5] = d[2 * n3 - 1];
-
-		// RECOMPUTE B MATRIX 
-		// Using node number from above to access x,y coordinates (Note: index starts is 1 less for matrices, hence the -1)
-		x1 = matNodes[n1 - 1][0]; y1 = matNodes[n1 - 1][1];
-		x2 = matNodes[n2 - 1][0]; y2 = matNodes[n2 - 1][1];
-		x3 = matNodes[n3 - 1][0]; y3 = matNodes[n3 - 1][1];
-
-		// Computing area of element
-		A = 0.5*((x2*y3 - x3*y2) + (x3*y1 - x1*y3) + (x1*y2 - x2*y1)); // needs an absolute sign
-
-																	   // Computing elements of matrix B
-		b1 = y2 - y3; b2 = y3 - y1; b3 = y1 - y2;
-		c1 = x3 - x2; c2 = x1 - x3; c3 = x2 - x1;
-
-		// Setting matrix B 
-		B[0][0] = b1 / (2 * A); B[0][2] = b2 / (2 * A); B[0][4] = b3 / (2 * A);
-		B[1][1] = c1 / (2 * A); B[1][3] = c2 / (2 * A); B[1][5] = c3 / (2 * A);
-		B[2][1] = b1 / (2 * A); B[2][3] = b2 / (2 * A); B[2][5] = b3 / (2 * A);
-		B[2][0] = c1 / (2 * A); B[2][2] = c2 / (2 * A); B[2][4] = c3 / (2 * A);
-
-		// Computing Stress
-		GLKMatrixLib::Mul(D, B, 3, 3, 6, temp2);
-		GLKMatrixLib::Mul(temp2, de, 3, 6, sige);
-
-		// Store vonMises for drawShade function
-		double vonMises = computeVonMises();
-		vonMisVec[element] = vonMises;
-
-		//Print stresses
-		std::cout << "vonMises of element:" << element << "is " << vonMises << std::endl;
-		PrintVector(sige,sigerow);
-
-	}
-
-}
-
-double FEM::computeVonMises() {
-
-	// For 2D problems only
-
-	return sqrt( (pow((sige[0] - sige[1]), 2) + pow(sige[0], 2) + pow(sige[1], 2) + 6 * pow(sige[2], 2))/2);
-}
 
 
 
 // Getting 
+
 int FEM::getNumberOfNodes() {
 	CMainFrame *pWnd = (CMainFrame *)(AfxGetMainWnd());
 
@@ -434,6 +526,125 @@ int FEM::getNumberOfFaces() {
 	return f;
 }
 
+
+
+
+// Main function 
+void FEM::MainFunction() {
+
+	// Do computations of matrix 
+	setProps();
+	setNodeMatrix();
+	setConnMatrix();
+	setDMatrix();
+
+	//Compute K matrix
+	computeKMatrix();
+
+	//Set BCS
+	setBCs();
+
+	//Modify System of Equations based on BCs
+	scatterKmod(K, Kmod);
+	scatterfmod(f, fmod);
+
+
+	//std::cout << "Kmod" << std::endl;
+	//PrintMatrix(Kmod, Kmodrow, Kmodcol);
+
+	//std::cout << "fmod" << std::endl;
+	//PrintVector(fmod, fmodrow);
+
+	//Solve system of equations
+
+	//bool doesSystemSolve = GLKMatrixLib::GaussSeidelSolver(Kmod, fmod, vars, dmod,1e-6);
+	bool doesSystemSolve = GLKMatrixLib::GaussJordanElimination(Kmod, vars, fmod);
+
+	std::cout << "bool doesSystemSolve =" << doesSystemSolve << std::endl;
+	//Note: in GaussJordan solver, b vector becomes the output vector hence fmod contains dmod solution
+	scatterBackDisplacements(fmod, d);
+
+	std::cout << "d" << std::endl;
+	PrintVector(d, drow);
+
+	double totald; 
+	int c = 0;
+	std::cout << "displacements at nodes = sqrt(dx^2+dy^2)" << std::endl;
+	for (int i = 0; i < nDOF; i = i+2) {
+		//computing total displacement at each node
+		totald = sqrt(pow(d[i], 2)+pow(d[i + 1], 2));
+		std::cout << "total d for node" << c << " is " << totald << std::endl;
+
+		
+		// DANGER ? 
+		//vonMisVec[c] = d[i]; 
+
+
+		//std::cout << "dx:" << d[i] << std::endl;
+		//std::cout << "dy:" << d[i + 1] << std::endl;
+		c = c + 1;
+		// safety break
+		if (c == 100) { break; }
+	}
+
+	//Compute Stresses
+
+	computeStress();
+
+	//Normalize vonMisVec (first find max value, then divide all by it)
+
+	double maxVM = 0.0;
+	for (int i = 0; i < nFaces; i++) {
+		if (vonMisVec[i] > maxVM)
+			maxVM = vonMisVec[i];
+	}
+
+	for (int i = 0; i < nFaces; i++) {
+		vonMisVec[i] = vonMisVec[i] / maxVM;
+	}
+
+	//Print
+	std::cout << " Printing values passed to color map CASE: Normalized Von Mises" << std::endl;
+	PrintVector(vonMisVec, vonMisVecrow);
+
+}
+
+
+// Post-processing
+void FEM::colorFaces() {
+	std::cout << "colorFaces" << std::endl;
+
+	//float rr = 0.85f, gg = 0.25f, bb = 0.25f, alpha = 0.9f;
+
+	//CMainFrame *pWnd = (CMainFrame *)(AfxGetMainWnd());
+	//CMeshWorksDoc *pDoc = (CMeshWorksDoc *)(pWnd->GetActiveDocument());
+	//CGLKernelView *cView = pWnd->GetMainView()->GetGLKernelView();
+
+	//QBody * body = (QBody*)(pDoc->m_meshList).GetHead();
+
+	//body->drawShade2();
+
+	AfxGetApp()->BeginWaitCursor();
+	CMainFrame *pWnd = (CMainFrame *)(AfxGetMainWnd());
+	//CString str;
+	//m_ptSize.GetWindowText(str);
+	
+	//pWnd->changePtSize(0, 30);
+	//body->vonMisesVecCopy = &vonMisVec;
+	
+	pWnd->ChangeColor(vonMisVec,vonMisVecrow);
+
+	AfxGetApp()->EndWaitCursor();
+
+	//int f = 0;
+	//for (GLKPOSITION Pos = body->GetTrglFaceList().GetHeadPosition(); Pos != NULL; ) {
+	//	entity = (GLEntity*)body->GetTrglFaceList().GetNext(Pos);
+	//	entity->
+	//	f = f + 1;
+	//}
+
+
+}
 
 
 // Setting Memory Functions
@@ -478,7 +689,7 @@ void FEM::Destroy() {
 	DeleteVector(d);
 	GLKMatrixLib::DeleteMatrix(K, Krow, Kcol);
 	GLKMatrixLib::DeleteMatrix(Ke, Kerow, Kecol);
-	
+
 	// Solving system of equations
 	DeleteVectorIsol(Isol);
 	GLKMatrixLib::DeleteMatrix(Kmod, Kmodrow, Kmodcol);
@@ -497,6 +708,9 @@ void FEM::Destroy() {
 }
 
 void FEM::CreateVector(double* &ptr, int ptrsize) {
+
+	ptr = NULL;
+
 	ptr = new double[ptrsize];
 	for (int i = 0; i < ptrsize; i++) {
 		ptr[i] = 0.0;
@@ -504,10 +718,14 @@ void FEM::CreateVector(double* &ptr, int ptrsize) {
 }
 
 void FEM::DeleteVector(double* &ptr) {
-	delete[] ptr; 
+	delete[] ptr;
+	ptr = NULL;
 }
 
 void FEM::CreateVectorIsol(int* &ptr, int ptrsize) {
+
+	ptr = NULL;
+
 	ptr = new int[ptrsize];
 	for (int i = 0; i < ptrsize; i++) {
 		ptr[i] = 0;
@@ -516,95 +734,6 @@ void FEM::CreateVectorIsol(int* &ptr, int ptrsize) {
 
 void FEM::DeleteVectorIsol(int* &ptr) {
 	delete[] ptr;
-}
 
-
-// Main function 
-void FEM::MainFunction() {
-
-	// Allocate required memory  
-	Create();
-
-	// Do computations of matrix 
-	setProps();
-	setNodeMatrix();
-	setConnMatrix();
-	setDMatrix();
-
-	//Compute K matrix
-	computeKMatrix();
-
-	//Set BCS
-	setBCs();
-
-	//Modify System of Equations based on BCs
-	scatterKmod(K, Kmod);
-	scatterfmod(f, fmod);
-
-
-	std::cout << "Kmod" << std::endl;
-	PrintMatrix(Kmod, Kmodrow, Kmodcol);
-
-	std::cout << "fmod" << std::endl;
-	PrintVector(fmod, fmodrow);
-
-	//Solve system of equations
-
-	//bool doesSystemSolve = GLKMatrixLib::GaussSeidelSolver(Kmod, fmod, vars, dmod,1e-6);
-	bool doesSystemSolve = GLKMatrixLib::GaussJordanElimination(Kmod, vars, fmod);
-
-	std::cout << "bool doesSystemSolve =" << doesSystemSolve << std::endl;
-	//Note: in GaussJordan solver, b vector becomes the output vector hence fmod contains dmod solution
-	scatterBackDisplacements(fmod, d);
-
-	std::cout << "d" << std::endl;
-	PrintVector(d, drow);
-
-	//Compute Stresses
-	computeStress();
-
-	//Normalize vonMisVec (first find max value, then divide all by it)
-	double maxVM = 0.0;
-	for (int i = 0; i < nFaces; i++) {
-		if (vonMisVec[i] > maxVM)
-			maxVM = vonMisVec[i];
-	}
-
-	for (int i = 0; i < nFaces; i++) {
-		vonMisVec[i] = vonMisVec[i] / maxVM;
-	}
-
-	//Print
-	PrintVector(vonMisVec, vonMisVecrow);
-	
-	// Deallocate memory before exiting
-	Destroy();
-
-}
-
-
-// Post-processing
-void FEM::colorFaces() {
-	std::cout << "colorFaces" << std::endl;
-
-	//float rr = 0.85f, gg = 0.25f, bb = 0.25f, alpha = 0.9f;
-
-	CMainFrame *pWnd = (CMainFrame *)(AfxGetMainWnd());
-	CMeshWorksDoc *pDoc = (CMeshWorksDoc *)(pWnd->GetActiveDocument());
-	//CGLKernelView *cView = pWnd->GetMainView()->GetGLKernelView();
-
-	QBody * body = (QBody*)(pDoc->m_meshList).GetHead();
-
-	body->drawNode2();
-
-	//GLEntity* entity = (GLEntity*)body->GetTrglFaceList().GetHead();
-
-	//int f = 0;
-	//for (GLKPOSITION Pos = body->GetTrglFaceList().GetHeadPosition(); Pos != NULL; ) {
-	//	entity = (GLEntity*)body->GetTrglFaceList().GetNext(Pos);
-	//	entity->
-	//	f = f + 1;
-	//}
-
-
+	ptr = NULL;
 }

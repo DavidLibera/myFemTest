@@ -8,8 +8,8 @@ public:
 	float t, E, v; // thickness, modulus, poisson
 
 	// Functions 
-	FEM() { std::cout << "FEM constructor called" << std::endl; };
-	~FEM() { std::cout << "FEM destructor called" << std::endl; };
+	FEM() { std::cout << "FEM constructor called" << std::endl; Create(); };
+	~FEM() { std::cout << "FEM destructor called" << std::endl; Destroy(); };
 	
 	// printing 
 	void printNodeCoord();
@@ -67,6 +67,9 @@ public:
 	double** Ke; int Kerow = 6, Kecol = 6;
 
 	// Matrices/Vectors for solving systems
+
+	// NOTE: WILL NEED TO MODIFY WHEN INTERACTIVE USER DEFINDED more than 2 or 5 BCS
+	//DANGER (vars = nDOF - 5 because 5 BCS are imposed otherwise must change for more general case)
 	int vars = nDOF-5; // unknowns
 	int* Isol; int Isolrow = vars; // THESE DIMENSIONS AFFECT THE NEXT MOD MATRICES for general case
 	double** Kmod; int Kmodrow = vars, Kmodcol = vars;

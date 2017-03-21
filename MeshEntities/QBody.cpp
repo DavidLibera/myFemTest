@@ -2,6 +2,7 @@
 #include "QBody.h"
 #include <math.h>
 #include "CH_ATTRIB_EDGENODE.h"
+#include <iostream>
 
 #ifdef _DEBUG
 #undef THIS_FILE
@@ -192,6 +193,7 @@ void QBody::drawShade()
 		//glBlendFunc(GL_ONE_MINUS_SRC_ALPHA,GL_SRC_ALPHA);
 
 		float rr = 0.75f, gg = 0.75f, bb = 0.75f, alpha=0.9f;
+		//float rr = 0.5f, gg = 0.5f, bb = 0.1f, alpha = 0.9f;
 
 		//rr=0.75f; gg=0.592f; bb=0.498f;
 
@@ -245,8 +247,10 @@ void QBody::drawShade2()
 	if (GetAttribFlag(5))
 		return;
 
-	float rr = 0.2f, gg = 0.1f, bb = 0.2f, alpha = 0.9f;
+	float rr = 0.1f;
+	float gg = 1.0f, bb = 1.0f, alpha = 0.9f;
 
+	int c = 0;
 	for (GLKPOSITION Pos = Patch->GetTrglFaceList().GetHeadPosition(); Pos != NULL;)
 	{
 		QMeshFace *temp = (QMeshFace *)(Patch->GetTrglFaceList().GetNext(Pos));
@@ -264,6 +268,15 @@ void QBody::drawShade2()
 		//glDepthMask(GL_FALSE);
 		//glEnable(GL_BLEND);
 		//glBlendFunc(GL_ONE_MINUS_SRC_ALPHA,GL_SRC_ALPHA);
+
+
+		// SETTTING COLOR (recall c is counter for each face) 
+		rr = myVec[c][0];
+		gg = myVec[c][1];
+		bb = 1.0 - rr; //myVec[c][2];
+
+
+
 
 		//rr=0.75f; gg=0.592f; bb=0.498f;
 
@@ -307,11 +320,15 @@ void QBody::drawShade2()
 			glVertex3d(x, y, z);
 		}
 		glEnd();
+
+
+		c = c + 1;
+		
 	}
 	//glDisable(GL_BLEND);
 	//glDepthMask(GL_TRUE);
 
-	rr = rr + 0.1; gg = gg + .05; bb = bb + 0.1;
+
 
 }
 
@@ -509,7 +526,8 @@ void QBody::drawNode2()
 
 	//	bool test=false; int tom=0;
 	
-	float rr = 0, gg = 0, bb = 0;
+
+	float rr = 0.9, gg = 0, bb = 0;
 
 	glEnable(GL_POINT_SMOOTH);
 	glBegin(GL_POINTS);
@@ -743,6 +761,7 @@ void QBody::ChangeValueToColor(double maxValue, double minValue, double Value,
 	}
 }
 
+
 //added for VSA
 void QBody::ChangeValueToColor(int nType, float & nRed, float & nGreen, float & nBlue)
 {
@@ -793,3 +812,16 @@ void QBody::ChangeValueToColor(int nType, float & nRed, float & nGreen, float & 
 	nGreen=color[nType%40][1]/255.0f;
 	nBlue=color[nType%40][2]/255.0f;
 }
+
+//void QBody::CreatemyVec(double* &myVec, int myVecRow) {
+//	myVec = NULL;
+//
+//	myVec = new double[myVecRow];
+//	for (int i = 0; i < myVecRow; i++) {
+//		myVec[i] = 0.0;
+//	}
+//}
+//void QBody::DeletemyVec(double* &myVec) {
+//	delete[] myVec;
+//	myVec = NULL;
+//}

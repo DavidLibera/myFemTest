@@ -51,7 +51,7 @@ void CMeshWorksApp::OnAppFEA()
 void CFEADlg::OnBnClickedSelectbcs()
 {
 	std::cout << "Setting boundaries conditions" << std::endl;
-	//pFEM->setBCs(); WONT WORK YET, because Create() is called in MainFunction()
+	pFEM->setBCs(); //WONT WORK YET, because Create() is called in MainFunction()
 }
 
 void CFEADlg::OnBnClickedSetprops()

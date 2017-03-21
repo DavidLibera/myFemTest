@@ -74,6 +74,7 @@ public:
 	bool m_nodeNormalDrawn;
 	bool m_meshDrawn;
 	bool m_lightON;
+	bool m_FEAON;
 
 private:
 	MouseTool *m_currentTool;

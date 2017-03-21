@@ -63,8 +63,11 @@ int SelectNodeTool::process_event(mouse_event_type even_type, const pick_event& 
 			double x, y, z;
 			selected->m_node->GetCoord3D(x, y, z);
 
+			// Added for FEA
+			int NodeNumber = selected->m_node->GetIndexNo();
+
 			CString str;
-			str.Format("Selected node coordinate: %f, %f, %f", x, y, z);
+			str.Format("Selected node, index number %d, coordinate: %f, %f, %f", NodeNumber,x, y, z);
 			AfxMessageBox(str);
 
 

@@ -31,6 +31,11 @@ public:
 	CMeshWorksView* GetMainView();
 	CControlPanel* GetControlPanel();
 	void changePtSize(int model, const float& ptSize);
+	// Added 
+	void ChangeColor(double* &vec, int vecRow);
+	//Added for FEA David (must be public)
+	void ChangeValueToColor2(double maxValue, double minValue, double Value, float & nRed, float & nGreen, float & nBlue);
+	bool getValueBetweenTwoFixedColors(float value, int &red, int &green, int &blue);
 
 	void ImportObjfiles(CString filename);
 	void ImportTetfiles(CString filename);

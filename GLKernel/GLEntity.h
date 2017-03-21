@@ -25,6 +25,7 @@ public:
 	//		TRUE - draw the shading mode
 	//		FALSE - draw the mesh mode
 	virtual void drawShade() {};
+	virtual void drawShade2() {};
 	virtual void drawProfile() {};
 	virtual void drawPreMesh() {};
 	virtual void drawMesh() {};
@@ -42,6 +43,7 @@ public:
 	BOOL inList;
 
 	UINT entityType;
+
 
 protected:
 	float red, green, blue;

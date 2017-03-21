@@ -537,7 +537,8 @@ BEGIN
     PUSHBUTTON      "Set Properties",IDC_SETPROPS,129,25,50,14
     PUSHBUTTON      "Analyze",IDC_ANALYZE,129,66,50,14
     LTEXT           "WARNING!!!: DO NOT USE IF MESH IS LARGE",IDC_STATIC,91,7,148,8
-    PUSHBUTTON      "Color Elements",IDC_BUTTON4,114,90,78,14
+    PUSHBUTTON      "Color Elements",IDC_BUTTON4,113,105,78,14
+    LTEXT           "Click only if myVec[nFaces][3] is set correctly nFaces set manually for now",IDC_STATIC,29,94,249,8
 END
 
 
