@@ -877,7 +877,7 @@ void CMainFrame::ChangeColor(double* &vec, int vecRow)
 			// ChangeValueToColor2(vecMax, vecMin, vec[i],red, green, blue); WORKS POORLY RANDOM COLORS EVERYWHERE
 			// getValueBetweenTwoFixedColors(vec[i], red, green, blue);    WORKS VERY POORLY HEAT MAP  http://www.andrewnoske.com/wiki/Code_-_heatmaps_and_color_gradients
 			patch->myVec[i][0] = vec[i]; // simplest and ok 
-			patch->myVec[i][1] = 0.0;// vec[i]; //green/ 255;
+			patch->myVec[i][1] = vec[i];// vec[i]; //green/ 255;
 			patch->myVec[i][2] = vec[i]; // blue / 255;
 
 			// TESTING 

@@ -70,7 +70,7 @@ public:
 
 	// NOTE: WILL NEED TO MODIFY WHEN INTERACTIVE USER DEFINDED more than 2 or 5 BCS
 	//DANGER (vars = nDOF - 5 because 5 BCS are imposed otherwise must change for more general case)
-	int vars = nDOF-5; // unknowns
+	int vars = getNumberOfNodes()*2-6; // unknowns
 	int* Isol; int Isolrow = vars; // THESE DIMENSIONS AFFECT THE NEXT MOD MATRICES for general case
 	double** Kmod; int Kmodrow = vars, Kmodcol = vars;
 	double* fmod; int fmodrow = vars;

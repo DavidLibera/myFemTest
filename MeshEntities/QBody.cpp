@@ -193,7 +193,7 @@ void QBody::drawShade()
 		//glBlendFunc(GL_ONE_MINUS_SRC_ALPHA,GL_SRC_ALPHA);
 
 		float rr = 0.75f, gg = 0.75f, bb = 0.75f, alpha=0.9f;
-		//float rr = 0.5f, gg = 0.5f, bb = 0.1f, alpha = 0.9f;
+		//float rr = 1.0f, gg = 1.0f, bb = 1.0f, alpha = 0.9f;
 
 		//rr=0.75f; gg=0.592f; bb=0.498f;
 
@@ -247,8 +247,8 @@ void QBody::drawShade2()
 	if (GetAttribFlag(5))
 		return;
 
-	float rr = 0.1f;
-	float gg = 1.0f, bb = 1.0f, alpha = 0.9f;
+
+	float rr = 0.75f, gg = 0.75f, bb = 0.75f, alpha = 0.9f;
 
 	int c = 0;
 	for (GLKPOSITION Pos = Patch->GetTrglFaceList().GetHeadPosition(); Pos != NULL;)
@@ -271,9 +271,9 @@ void QBody::drawShade2()
 
 
 		// SETTTING COLOR (recall c is counter for each face) 
-		rr = myVec[c][0];
-		gg = myVec[c][1];
-		bb = 1.0 - rr; //myVec[c][2];
+		rr = 1.0-myVec[c][0];
+		gg = 1.0-myVec[c][1];
+		bb = 1.0-myVec[c][2]; //myVec[c][2];
 
 
 

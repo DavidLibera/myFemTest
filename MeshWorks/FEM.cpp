@@ -189,45 +189,37 @@ void FEM::setBCs() {
 	
 	//Y-displacement is zero at edge 
 	int DOF1 = sqrt(nNodes) * 2;
-	
+	int DOF1b = sqrt(nNodes) * 2 - 1;
 	// upper d = 0 
 	int DOF2 = (nNodes - sqrt(nNodes) + 1) * 2;		// NOTE: DANGER I AM ASSUMING nNodes is a square number
 	int DOF3 = (nNodes - sqrt(nNodes) + 1) * 2 - 1;
-	
 	// lower d = 0 
 	int DOF4 = 1;
 	int DOF5 = 2;
-
 	int FORCEDOF = nNodes * 2;
 
-	std::cout << "DOF1:" << DOF1 << std::endl;
-
-	std::cout << "DOF2:" << DOF2 << std::endl;
-
-	std::cout << "DOF3:" << DOF3 << std::endl;
-
-	std::cout << "DOF4:" << DOF4 << std::endl;
-
-	std::cout << "DOF5:" << DOF5 << std::endl;
-
-	std::cout << "FORCE DOF:" << FORCEDOF << std::endl;
-
-
+	//std::cout << "DOF1:" << DOF1 << std::endl;
+	//std::cout << "DOF2:" << DOF2 << std::endl;
+	//std::cout << "DOF3:" << DOF3 << std::endl;
+	//std::cout << "DOF4:" << DOF4 << std::endl;
+	//std::cout << "DOF5:" << DOF5 << std::endl;
+	//std::cout << "FORCE DOF:" << FORCEDOF << std::endl;
 
 	int c = 0;
 	for (int i = 1; i <= nDOF; i++) {
-		if (i != DOF1 && i != DOF2 && i != DOF3 && i != DOF4 && i != DOF5) {
+		if (i != DOF1 && i!= DOF1b && i != DOF2 && i != DOF3 && i != DOF4 && i != DOF5) {
 			Isol[c] = i;
+			std::cout << Isol[c] << std::endl;
 			c = c + 1;
 		}
 	}
 	//NOTE: I need to indent this one -1
-	f[FORCEDOF-1] = -1225; // Fy at node 3 is 1225 
+	f[FORCEDOF-1] = -1225; // Fy at node 3 is 1225
+	f[FORCEDOF - 2] = -1225; // Fx
 
-
-
-
-
+	std::cout << "nDOF " << nDOF << std::endl;
+	std::cout << "vars:" << vars << std::endl;
+ 
 	// FOR 9 nodes 18 DOF
 	//std::cout << "if (i != 2 && i != 13 && i != 14 && i != 17 && i != 18) {" << std::endl;
 	//int c = 0;
@@ -431,8 +423,6 @@ void FEM::scatter(double** &Ke, double** &K, int n1, int n2, int n3) {
 
 void FEM::scatterKmod(double** &K, double** &Kmod) {
 
-	// WARNING: IT IS NOT GENERAL ONLY FOR 4 node case 
-
 	// Entries of Isol represent rows and cols that will be extracted
 	int n = vars;
 
@@ -457,8 +447,6 @@ void FEM::scatterKmod(double** &K, double** &Kmod) {
 
 void FEM::scatterfmod(double* &f, double* &fmod) {
 
-	// WARNING! : Only valid for 4 nodes 
-
 	int n = vars;
 	
 	int row;
@@ -472,8 +460,6 @@ void FEM::scatterfmod(double* &f, double* &fmod) {
 }
 
 void FEM::scatterBackDisplacements(double* &dmod, double* &d) {
-
-	// WARNING! : Only valid for 4 nodes 
 
 	int n = vars; // n is the number of columns in Isol 
 	int row;
@@ -551,9 +537,9 @@ void FEM::MainFunction() {
 
 	//std::cout << "Kmod" << std::endl;
 	//PrintMatrix(Kmod, Kmodrow, Kmodcol);
-
 	//std::cout << "fmod" << std::endl;
 	//PrintVector(fmod, fmodrow);
+	
 
 	//Solve system of equations
 
