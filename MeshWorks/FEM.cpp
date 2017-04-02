@@ -74,10 +74,14 @@ void FEM::PrintVector(double* &a, int row) {
 
 void FEM::setProps() {
 	std::cout << "FEM::setProps()" << std::endl;
-
+	/*
 	t = 0.5; // thickness
 	E = 30e6; // modulus
 	v = 0.25; // poissons
+	*/
+	t = .001;
+	E = 200e9; // 1 GPA = 1e6 Pa 
+	v = 0.3;
 }
 
 void FEM::setNodeMatrix() {
@@ -137,11 +141,11 @@ void FEM::setBCs() {
 
 	// FOR GENERAL CASE
 
-	//DANGER (ONLY FOR SQUARE MESH) affected nodes and ONLY SELF MADE MESH will make sense
-	
-	//Y-displacement is zero at edge 
+	// CASE 1: DANGER (ONLY FOR SQUARE MESH) affected nodes and ONLY SELF MADE MESH will make sense
+	/*
+    //Y-displacement is zero at edge 
 	int DOF1 = sqrt(nNodes) * 2;
-	int DOF2 = sqrt(nNodes) * 2 - 1;
+	//int DOF2 = sqrt(nNodes) * 2 - 1;
 	// upper d = 0 
 	int DOF3 = (nNodes - sqrt(nNodes) + 1) * 2;		// NOTE: DANGER I AM ASSUMING nNodes is a square number
 	int DOF4 = (nNodes - sqrt(nNodes) + 1) * 2 - 1;
@@ -159,7 +163,7 @@ void FEM::setBCs() {
 
 	int c = 0;
 	for (int i = 1; i <= nDOF; i++) {
-		if (i != DOF1 /*&& i!= DOF2*/ && i != DOF3 && i != DOF4 && i != DOF5 && i != DOF6) {
+		if (i != DOF1 && i != DOF3 && i != DOF4 && i != DOF5 && i != DOF6) {
 			Isol[c] = i;
 			c = c + 1;
 		}
@@ -167,6 +171,131 @@ void FEM::setBCs() {
 	//NOTE: I need to indent this one -1
 	f[FORCEDOF-1] = 1225; // Fy at node 3 is 1225
 	//f[FORCEDOF - 2] = -1225; // Fx
+
+	*/
+
+	// CASE 2: FOR PLATE WITH HOLE 
+	
+	/*
+
+	// Objective: create 3 lists (include,exclude,all) 
+	// exclude: node numbers from listNodesExclude *2 and *2-1
+	// include:
+	// Isol: an array that mimics vector Isol (required form for FEM) 
+	std::vector<int> listNodesExclude = { 2, 5, 7, 3, 6, 4, 8, 1 }; 
+	std::vector<int> listDOFInclude;
+	
+	// setting listDOFInclude 
+	for (int i = 0; i < nDOF; i++) {
+		listDOFInclude.push_back(i + 1);
+	}
+
+	// eliminating values from listDOFInclude from list listNodes Include (both x and y components) 
+	int my_int; 
+	for (int i = 0; i < listNodesExclude.size(); i++) {
+		for (int j = 0; j < 2; j++) {
+			if (j == 0)
+				my_int = listNodesExclude[i] * 2;
+			else
+				my_int = listNodesExclude[i] * 2 - 1;
+
+			auto it = std::find(listDOFInclude.begin(), listDOFInclude.end(), my_int);
+			if (it != listDOFInclude.end()) {
+				listDOFInclude.erase(it);
+			}
+		}
+	}
+
+	// Set Isol to vector
+	std::cout << "printing Isol" << std::endl;
+	for (int i = 0; i < listDOFInclude.size(); i++) {
+		Isol[i] = listDOFInclude[i];
+		std::cout << "Isol[i]" << Isol[i] << std::endl;
+	}
+
+	//set force vector
+	f[2 * 251 - 2] = 1500;
+	f[2 * 243 - 2] = 1500;
+	f[2 * 245 - 2] = 1500;
+	f[2 * 246 - 2] = 1500;
+	f[2 * 248 - 2] = 1500;
+	f[2 * 249 - 2] = 1500;
+	f[2 * 247 - 2] = 1500;
+	f[2 * 244 - 2] = 1500;
+	f[2 * 242 - 2] = 1500;
+	f[2 * 250 - 2] = 1500;
+
+	*/
+
+	// CASE 3: PLATE IN TENSILE
+
+	// case 3 by 10
+	 
+	/*
+	int c = 0;
+	for (int i = 1; i <= nDOF; i++) {
+		if (i != 10 && i != 20 && i != 30) {
+			Isol[c] = i;
+			c = c + 1;
+		}
+	}
+	f[1 * 2 - 2] = 2000/3;
+	f[11 * 2 - 2] = 2000/3;
+	f[21 * 2 - 2] = 2000 / 3;
+	*/
+
+	// case 3 by 10 (using vectors)
+	std::vector<int> listNodesExclude = { 50,100,150,200,250,300,350,400,450,500 };//{20,40,60,80,100,120};
+	std::vector<int> listDOFInclude;
+
+	// setting listDOFInclude 
+	for (int i = 0; i < nDOF; i++) {
+		listDOFInclude.push_back(i + 1);
+	}
+
+	// eliminating values from listDOFInclude from list listNodes Include (both x and y components) 
+	int my_int;
+	for (int i = 0; i < listNodesExclude.size(); i++) {
+		for (int j = 0; j < 2; j++) {
+			if (j == 0)
+				my_int = listNodesExclude[i] * 2;
+			else
+				my_int = listNodesExclude[i] * 2 - 1;
+
+			auto it = std::find(listDOFInclude.begin(), listDOFInclude.end(), my_int);
+			if (it != listDOFInclude.end()) {
+				listDOFInclude.erase(it);
+			}
+		}
+	}
+
+	// Set Isol to vector
+	std::cout << "printing Isol" << std::endl;
+	for (int i = 0; i < listDOFInclude.size(); i++) {
+		Isol[i] = listDOFInclude[i];
+		//std::cout << "Isol[i]: " << Isol[i] << std::endl;
+	}
+
+	double Force = 2000 /listNodesExclude.size();  //total force divided equally between # nodes at edge
+
+	//f[1 * 2 - 2] = Force;
+	//f[21 * 2 - 2] = Force;
+	//f[41 * 2 - 2] = Force;
+	//f[61 * 2 - 2] = Force;
+	//f[81 * 2 - 2] = Force;
+	//f[101 * 2 - 2] = Force;
+
+	f[1 * 2 - 2] = Force;
+	f[51 * 2 - 2] = Force;
+	f[101 * 2 - 2] = Force;
+	f[151 * 2 - 2] = Force;
+	f[201 * 2 - 2] = Force;
+	f[251 * 2 - 2] = Force;
+	f[301 * 2 - 2] = Force;
+	f[351 * 2 - 2] = Force;
+	f[401 * 2 - 2] = Force;
+	f[451 * 2 - 2] = Force;
+
 
 }
 
@@ -272,7 +401,7 @@ void FEM::computeStress() {
 		//Print stresses
 		//std::cout << "Sige:" << std::endl;
 		//PrintVector(sige, sigerow);
-		std::cout << "vonMises of element:" << element << "is " << vonMises << std::endl;
+		//std::cout << "vonMises of element:" << element << "is " << vonMises << std::endl;
 
 	}
 
@@ -454,6 +583,9 @@ void FEM::MainFunction() {
 	//Note: in GaussJordan solver, b vector becomes the output vector hence fmod contains dmod solution
 	scatterBackDisplacements(fmod, d);
 
+	//std::cout << "d: " << std::endl;
+	//PrintVector(d, drow);
+
 	//std::cout << "d" << std::endl;
 	//PrintVector(d, drow);
 
@@ -480,12 +612,13 @@ void FEM::MainFunction() {
 	//std::cout << " Printing values passed to color map CASE: Normalized Von Mises" << std::endl;
 	//PrintVector(vonMisVec, vonMisVecrow);
 
-
-	std::cout << "Max VM : " << maxVM << "at Face index" << maxVMindex << std::endl;
+	std::cout << "Max VM (Mpa): " << maxVM/1e6 << "at Face index" << maxVMindex << std::endl;
 
 	for (int i = 0; i < nFaces; i++) {
 		vonMisVec[i] = 1.0 - (vonMisVec[i]/ maxVM);
 	}
+
+	std::cout << "END OF FEM" << std::endl;
 
 	//Print
 	//std::cout << " Printing values passed to color map CASE: Normalized Von Mises" << std::endl;

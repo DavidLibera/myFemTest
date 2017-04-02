@@ -32,7 +32,7 @@ public:
 			Kerow = 6; Kecol = 6;
 
 			//Initializing for solver
-			vars = nNodes * 2 - 5; // unknowns (DEPENDS ON BCS) ************************************************
+			vars = nDOF - 20; // unknowns (DEPENDS ON BCS) ************************************************
 			Isolrow = vars;
 			Kmodrow = vars; Kmodcol = vars;
 			fmodrow = vars;
