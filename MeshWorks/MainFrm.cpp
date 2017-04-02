@@ -866,7 +866,7 @@ void CMainFrame::ChangeColor(double* &vec, int vecRow)
 
 
 	// Need access to QBody through pointer
-	int red, green, blue;
+	float red, green, blue;
 
 	for (POSITION Pos = (pDoc->m_meshList).GetHeadPosition(); Pos != NULL;) {
 
@@ -874,11 +874,11 @@ void CMainFrame::ChangeColor(double* &vec, int vecRow)
 		
 		for (int i = 0; i < vecRow; i++) {
 
-			// ChangeValueToColor2(vecMax, vecMin, vec[i],red, green, blue); WORKS POORLY RANDOM COLORS EVERYWHERE
+			ChangeValueToColor2(vecMax, vecMin, vec[i],red, green, blue); //WORKS POORLY RANDOM COLORS EVERYWHERE
 			// getValueBetweenTwoFixedColors(vec[i], red, green, blue);    WORKS VERY POORLY HEAT MAP  http://www.andrewnoske.com/wiki/Code_-_heatmaps_and_color_gradients
-			patch->myVec[i][0] = vec[i]; // simplest and ok 
-			patch->myVec[i][1] = vec[i];// vec[i]; //green/ 255;
-			patch->myVec[i][2] = vec[i]; // blue / 255;
+			patch->myVec[i][0] = red;//vec[i]; // simplest and ok 
+			patch->myVec[i][1] = green;//vec[i];// vec[i]; //green/ 255;
+			patch->myVec[i][2] = blue;//vec[i]; // blue / 255;
 
 			// TESTING 
 			//std::cout << patch->myVec[i] << std::endl;

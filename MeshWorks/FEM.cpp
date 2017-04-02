@@ -135,67 +135,19 @@ void FEM::setDMatrix() {
 
 void FEM::setBCs() {
 
-	//std::vector<int> vDOF(nDOF); 
-	//std::vector<int> vConstr(5); // user defined
-	//std::vector<int> vUnconstr(nDOF-5);  // depends on user defined
-
-	//// create vector of 1 to 18 
-	//for (int i = 1; i <= 18; i++) vDOF.push_back(i);
-
-	//// create vector of vConstr (USER-DEFINED)
-	//std::cout << "Enter rows that are constrained:" << std::endl;
-	//for (int i = 0; i < vConstr.size(); i++) {
-	//	int x;
-	//	std::cin >> x; 
-	//	vConstr.push_back(x);
-	//	std::cout << "--next--" << std::endl;
-	//}
-
-	//// set_intersection algorithm
-	//std::vector<int>::iterator it;
-	//std::vector<int> vstore;
-
-	//it = std::set_intersection(v); //this MAY be used on array for general case
-
-	// FOR General Mesh: I want Isol to store values index 1 to nDOF-1 which correspond to free constraints
-	// excluding index 0 and 1 which will be = 0 displacement 
-
-	// Check why it didn't work, maybe check ... int vars = nDOF-2; // unknowns
-
-	//int c = 0;
-	//for (int i = 1; i <= nDOF; i++) {
-	//	if (i != 1 && i != 2) {
-	//		Isol[c] = i;
-	//		c = c + 1;
-	//	}
-	//}
-	//f[8] = -1225; // Fy at node 3 is 1225
-	//f[9] = -1225;
-
-	// FOR 5x5 nodes nodes 50 DOF 
-	//int c = 0;
-	//for (int i = 1; i <= nDOF; i++) {
-	//	if (i != 2 && i != 25 && i != 26 && i != nDOF-1 && i != nDOF) {
-	//		Isol[c] = i;
-	//		c = c + 1;
-	//	}
-	//}
-	//f[8] = -1225; // Fy at node 3 is 1225 
-
-
 	// FOR GENERAL CASE
 
 	//DANGER (ONLY FOR SQUARE MESH) affected nodes and ONLY SELF MADE MESH will make sense
 	
 	//Y-displacement is zero at edge 
 	int DOF1 = sqrt(nNodes) * 2;
-	int DOF1b = sqrt(nNodes) * 2 - 1;
+	int DOF2 = sqrt(nNodes) * 2 - 1;
 	// upper d = 0 
-	int DOF2 = (nNodes - sqrt(nNodes) + 1) * 2;		// NOTE: DANGER I AM ASSUMING nNodes is a square number
-	int DOF3 = (nNodes - sqrt(nNodes) + 1) * 2 - 1;
+	int DOF3 = (nNodes - sqrt(nNodes) + 1) * 2;		// NOTE: DANGER I AM ASSUMING nNodes is a square number
+	int DOF4 = (nNodes - sqrt(nNodes) + 1) * 2 - 1;
 	// lower d = 0 
-	int DOF4 = 1;
-	int DOF5 = 2;
+	int DOF5 = 1;
+	int DOF6 = 2;
 	int FORCEDOF = nNodes * 2;
 
 	//std::cout << "DOF1:" << DOF1 << std::endl;
@@ -207,43 +159,14 @@ void FEM::setBCs() {
 
 	int c = 0;
 	for (int i = 1; i <= nDOF; i++) {
-		if (i != DOF1 && i!= DOF1b && i != DOF2 && i != DOF3 && i != DOF4 && i != DOF5) {
+		if (i != DOF1 /*&& i!= DOF2*/ && i != DOF3 && i != DOF4 && i != DOF5 && i != DOF6) {
 			Isol[c] = i;
-			std::cout << Isol[c] << std::endl;
 			c = c + 1;
 		}
 	}
 	//NOTE: I need to indent this one -1
-	f[FORCEDOF-1] = -1225; // Fy at node 3 is 1225
-	f[FORCEDOF - 2] = -1225; // Fx
-
-	std::cout << "nDOF " << nDOF << std::endl;
-	std::cout << "vars:" << vars << std::endl;
- 
-	// FOR 9 nodes 18 DOF
-	//std::cout << "if (i != 2 && i != 13 && i != 14 && i != 17 && i != 18) {" << std::endl;
-	//int c = 0;
-	//for (int i = 1; i <= nDOF; i++) {
-	//	if (i != 2 && i != 13 && i != 14 && i != 17 && i != 18) {
-	//		Isol[c] = i;
-	//		c = c + 1;
-	//	}
-	//}
-	//f[5] = -1225; // Fy at node 3 is 1225 
-
-	// FOR 9 nodes 18 DOF (arbitrary) 
-	//int c = 0;
-	//for (int i = 1; i <= nDOF; i++) {
-	//	if (i != 1 && i != 2 && i != 3 && i != 4 && i != 18) {
-	//		Isol[c] = i;
-	//		c = c + 1;
-	//	}
-	//}
-	//f[14] = -1225; // Fy at node 3 is 1225 
-
-	// FOR 4 nodes 8 DOF
-	//Isol[0] = 1; Isol[1] = 3; Isol[2] = 4; // 4 node case
-	//f[3] = -1225;
+	f[FORCEDOF-1] = 1225; // Fy at node 3 is 1225
+	//f[FORCEDOF - 2] = -1225; // Fx
 
 }
 
@@ -251,29 +174,7 @@ void FEM::setBCs() {
 // Computing
 
 void FEM::computeKMatrix() {
-	/*
-	CMainFrame *pWnd = (CMainFrame *)(AfxGetMainWnd());
 
-	CMeshWorksDoc *pDoc = (CMeshWorksDoc *)(pWnd->GetActiveDocument());
-	CGLKernelView *cView = pWnd->GetMainView()->GetGLKernelView();
-
-	QBody * body = (QBody*)(pDoc->m_meshList).GetHead();
-	QMeshFace* pFace = (QMeshFace*)body->GetTrglFaceList().GetHead();
-
-	double xx, yy, zz;
-	int f = 0;
-	for (GLKPOSITION Pos = body->GetTrglFaceList().GetHeadPosition(); Pos != NULL; ) {
-		pFace = (QMeshFace*)body->GetTrglFaceList().GetNext(Pos);
-		
-		for (int i = 1; i <= 3; i++) {
-			
-			pFace->GetNodePos(i, xx, yy, zz);
-
-
-		}
-		f = f + 1;
-	}
-	*/
 	int n1, n2, n3;
 	double x1, y1, z1, x2, y2, z2, x3, y3, z3;
 	double b1, b2, b3, c1, c2, c3, A;
@@ -366,9 +267,12 @@ void FEM::computeStress() {
 		double vonMises = computeVonMises();
 		vonMisVec[element] = vonMises;
 
+
+
 		//Print stresses
-		//std::cout << "vonMises of element:" << element << "is " << vonMises << std::endl;
+		//std::cout << "Sige:" << std::endl;
 		//PrintVector(sige, sigerow);
+		std::cout << "vonMises of element:" << element << "is " << vonMises << std::endl;
 
 	}
 
@@ -550,48 +454,66 @@ void FEM::MainFunction() {
 	//Note: in GaussJordan solver, b vector becomes the output vector hence fmod contains dmod solution
 	scatterBackDisplacements(fmod, d);
 
-	std::cout << "d" << std::endl;
-	PrintVector(d, drow);
-
-	double totald; 
-	int c = 0;
-	std::cout << "displacements at nodes = sqrt(dx^2+dy^2)" << std::endl;
-	for (int i = 0; i < nDOF; i = i+2) {
-		//computing total displacement at each node
-		totald = sqrt(pow(d[i], 2)+pow(d[i + 1], 2));
-		std::cout << "total d for node" << c << " is " << totald << std::endl;
-
-		
-		// DANGER ? 
-		//vonMisVec[c] = d[i]; 
-
-
-		//std::cout << "dx:" << d[i] << std::endl;
-		//std::cout << "dy:" << d[i + 1] << std::endl;
-		c = c + 1;
-		// safety break
-		if (c == 100) { break; }
-	}
+	//std::cout << "d" << std::endl;
+	//PrintVector(d, drow);
 
 	//Compute Stresses
 
 	computeStress();
 
+	// POST PROCESSING **************************************
+
 	//Normalize vonMisVec (first find max value, then divide all by it)
 
 	double maxVM = 0.0;
+	int maxVMindex = 0;
 	for (int i = 0; i < nFaces; i++) {
-		if (vonMisVec[i] > maxVM)
+		if (vonMisVec[i] > maxVM) {
 			maxVM = vonMisVec[i];
+			maxVMindex = i;
+		}
+
 	}
 
+
+	//Print
+	//std::cout << " Printing values passed to color map CASE: Normalized Von Mises" << std::endl;
+	//PrintVector(vonMisVec, vonMisVecrow);
+
+
+	std::cout << "Max VM : " << maxVM << "at Face index" << maxVMindex << std::endl;
+
 	for (int i = 0; i < nFaces; i++) {
-		vonMisVec[i] = vonMisVec[i] / maxVM;
+		vonMisVec[i] = 1.0 - (vonMisVec[i]/ maxVM);
 	}
 
 	//Print
-	std::cout << " Printing values passed to color map CASE: Normalized Von Mises" << std::endl;
-	PrintVector(vonMisVec, vonMisVecrow);
+	//std::cout << " Printing values passed to color map CASE: Normalized Von Mises" << std::endl;
+	//PrintVector(vonMisVec, vonMisVecrow);
+
+	/*
+	double totald;
+	int c = 0;
+	std::cout << "displacements at nodes = sqrt(dx^2+dy^2)" << std::endl;
+	for (int i = 0; i < nDOF; i = i+2) {
+	//computing total displacement at each node
+	totald = sqrt(pow(d[i], 2)+pow(d[i + 1], 2));
+	std::cout << "total d for node" << c << " is " << totald << std::endl;
+
+
+	// DANGER ?
+	//vonMisVec[c] = d[i];
+
+
+	//std::cout << "dx:" << d[i] << std::endl;
+	//std::cout << "dy:" << d[i + 1] << std::endl;
+	c = c + 1;
+	// safety break
+	if (c == 100) { break; }
+	}
+	*/
+
+
 
 }
 
@@ -600,35 +522,12 @@ void FEM::MainFunction() {
 void FEM::colorFaces() {
 	std::cout << "colorFaces" << std::endl;
 
-	//float rr = 0.85f, gg = 0.25f, bb = 0.25f, alpha = 0.9f;
-
-	//CMainFrame *pWnd = (CMainFrame *)(AfxGetMainWnd());
-	//CMeshWorksDoc *pDoc = (CMeshWorksDoc *)(pWnd->GetActiveDocument());
-	//CGLKernelView *cView = pWnd->GetMainView()->GetGLKernelView();
-
-	//QBody * body = (QBody*)(pDoc->m_meshList).GetHead();
-
-	//body->drawShade2();
-
 	AfxGetApp()->BeginWaitCursor();
 	CMainFrame *pWnd = (CMainFrame *)(AfxGetMainWnd());
-	//CString str;
-	//m_ptSize.GetWindowText(str);
-	
-	//pWnd->changePtSize(0, 30);
-	//body->vonMisesVecCopy = &vonMisVec;
-	
+
 	pWnd->ChangeColor(vonMisVec,vonMisVecrow);
 
 	AfxGetApp()->EndWaitCursor();
-
-	//int f = 0;
-	//for (GLKPOSITION Pos = body->GetTrglFaceList().GetHeadPosition(); Pos != NULL; ) {
-	//	entity = (GLEntity*)body->GetTrglFaceList().GetNext(Pos);
-	//	entity->
-	//	f = f + 1;
-	//}
-
 
 }
 
