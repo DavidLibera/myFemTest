@@ -14,6 +14,8 @@
 #include "..\ANN\ANN.h"
 
 #include <vector> // useful for BCs
+#include <iostream>
+#include <fstream>
 
 
 // Member functions of class FEM 
@@ -79,8 +81,8 @@ void FEM::setProps() {
 	E = 30e6; // modulus
 	v = 0.25; // poissons
 	*/
-	t = .001;
-	E = 200e9; // 1 GPA = 1e6 Pa 
+	t = .001; //m 
+	E = 200e9; // 1 GPA = 1e9 Pa 
 	v = 0.3;
 }
 
@@ -142,7 +144,7 @@ void FEM::setBCs() {
 	// FOR GENERAL CASE
 
 	// CASE 1: DANGER (ONLY FOR SQUARE MESH) affected nodes and ONLY SELF MADE MESH will make sense
-	/*
+	
     //Y-displacement is zero at edge 
 	int DOF1 = sqrt(nNodes) * 2;
 	//int DOF2 = sqrt(nNodes) * 2 - 1;
@@ -172,15 +174,11 @@ void FEM::setBCs() {
 	f[FORCEDOF-1] = 1225; // Fy at node 3 is 1225
 	//f[FORCEDOF - 2] = -1225; // Fx
 
-	*/
+	
 
 	// CASE 2: FOR PLATE WITH HOLE 
-	
-	/*
 
-	// Objective: create 3 lists (include,exclude,all) 
-	// exclude: node numbers from listNodesExclude *2 and *2-1
-	// include:
+	/*
 	// Isol: an array that mimics vector Isol (required form for FEM) 
 	std::vector<int> listNodesExclude = { 2, 5, 7, 3, 6, 4, 8, 1 }; 
 	std::vector<int> listDOFInclude;
@@ -224,27 +222,11 @@ void FEM::setBCs() {
 	f[2 * 244 - 2] = 1500;
 	f[2 * 242 - 2] = 1500;
 	f[2 * 250 - 2] = 1500;
-
 	*/
 
-	// CASE 3: PLATE IN TENSILE
-
-	// case 3 by 10
-	 
+	// CASE 3: PLATE IN TENSILE	 
 	/*
-	int c = 0;
-	for (int i = 1; i <= nDOF; i++) {
-		if (i != 10 && i != 20 && i != 30) {
-			Isol[c] = i;
-			c = c + 1;
-		}
-	}
-	f[1 * 2 - 2] = 2000/3;
-	f[11 * 2 - 2] = 2000/3;
-	f[21 * 2 - 2] = 2000 / 3;
-	*/
-
-	// case 3 by 10 (using vectors)
+	// case 3 by 10 and 10 by 50(using vectors)
 	std::vector<int> listNodesExclude = { 50,100,150,200,250,300,350,400,450,500 };//{20,40,60,80,100,120};
 	std::vector<int> listDOFInclude;
 
@@ -269,33 +251,35 @@ void FEM::setBCs() {
 		}
 	}
 
-	// Set Isol to vector
+	// Copy content of vector to Isol[]
 	std::cout << "printing Isol" << std::endl;
 	for (int i = 0; i < listDOFInclude.size(); i++) {
 		Isol[i] = listDOFInclude[i];
-		//std::cout << "Isol[i]: " << Isol[i] << std::endl;
 	}
 
-	double Force = 2000 /listNodesExclude.size();  //total force divided equally between # nodes at edge
+	double Force = 2000/listNodesExclude.size();  //total force divided equally between # nodes at edge
 
-	//f[1 * 2 - 2] = Force;
-	//f[21 * 2 - 2] = Force;
-	//f[41 * 2 - 2] = Force;
-	//f[61 * 2 - 2] = Force;
-	//f[81 * 2 - 2] = Force;
-	//f[101 * 2 - 2] = Force;
+	std::cout << "Force: " << Force << std::endl;
 
-	f[1 * 2 - 2] = Force;
-	f[51 * 2 - 2] = Force;
-	f[101 * 2 - 2] = Force;
-	f[151 * 2 - 2] = Force;
-	f[201 * 2 - 2] = Force;
-	f[251 * 2 - 2] = Force;
-	f[301 * 2 - 2] = Force;
-	f[351 * 2 - 2] = Force;
-	f[401 * 2 - 2] = Force;
-	f[451 * 2 - 2] = Force;
+	//f[1 * 2 - 2] = -Force;
+	//f[21 * 2 - 2] =-Force;
+	//f[41 * 2 - 2] =-Force;
+	//f[61 * 2 - 2] =-Force;
+	//f[81 * 2 - 2] =-Force;
+	//f[101 * 2 - 2] =-Force;
 
+	f[1 * 2 - 2]   =-Force;
+	f[51 * 2 - 2]  =-Force;
+	f[101 * 2 - 2] = Force; 
+	f[101 * 2 - 2] =-Force;
+	f[151 * 2 - 2] =-Force;
+	f[201 * 2 - 2] =-Force;
+	f[251 * 2 - 2] =-Force;
+	f[301 * 2 - 2] =-Force;
+	f[351 * 2 - 2] =-Force;
+	f[401 * 2 - 2] =-Force;
+	f[451 * 2 - 2] =-Force;
+	*/
 
 }
 
@@ -357,6 +341,10 @@ void FEM::computeStress() {
 	int n1, n2, n3;
 	double b1, b2, b3, c1, c2, c3, x1, x2, x3, y1, y2, y3, A;
 
+	//openfile for extracting data for MATLAB
+	std::ofstream myfile;
+	myfile.open("example.txt");
+
 	for (int element = 0; element < nFaces; element++) {
 		n1 = matConn[element][0];
 		n2 = matConn[element][1];
@@ -396,13 +384,15 @@ void FEM::computeStress() {
 		double vonMises = computeVonMises();
 		vonMisVec[element] = vonMises;
 
-
+		toFile(element, sige[0], sige[1], sige[2], vonMises,myfile);
 
 		//Print stresses
-		//std::cout << "Sige:" << std::endl;
-		//PrintVector(sige, sigerow);
-		//std::cout << "vonMises of element:" << element << "is " << vonMises << std::endl;
-
+		
+		if (element % 200 == 0) {
+			std::cout << "Sige:" << std::endl;
+			PrintVector(sige, sigerow);
+			std::cout << "vonMises of element:" << element << "is " << vonMises << std::endl;
+		}
 	}
 
 }
@@ -662,6 +652,15 @@ void FEM::colorFaces() {
 
 	AfxGetApp()->EndWaitCursor();
 
+}
+
+void FEM::openFile() {
+	std::ofstream myfile;
+	myfile.open("example.txt");
+}
+
+void FEM::toFile(int face, double sigx, double sigy, double tauxy, double vonMis, std::ofstream& myfile) {
+	myfile << face << " " << sigx << " " << sigy << " " << tauxy << " " << vonMis << std::endl;
 }
 
 

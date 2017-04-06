@@ -32,7 +32,7 @@ public:
 			Kerow = 6; Kecol = 6;
 
 			//Initializing for solver
-			vars = nDOF - 20; // unknowns (DEPENDS ON BCS) ************************************************
+			vars = nDOF - 5; // unknowns (DEPENDS ON BCS) ************************************************
 			Isolrow = vars;
 			Kmodrow = vars; Kmodcol = vars;
 			fmodrow = vars;
@@ -91,6 +91,8 @@ public:
 
 	// PostProcessing
 	void colorFaces();
+	void openFile();
+	void toFile(int node, double sigx, double sigy, double tauxy,double vonMis, std::ofstream& myfile);
 
 	// Main function
 	void MainFunction();
@@ -129,7 +131,7 @@ public:
 	double** BT;			int BTrow,BTcol;
 	double**temp;			int trow,tcol;
 	double**temp2;          int t2row, t2col;
-	double* vonMisVec;      int vonMisVecrow; 
+	double* vonMisVec;      int vonMisVecrow;
 
 };
 

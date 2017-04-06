@@ -100,7 +100,7 @@ public:
 	//Added for FEA David (must be public)
 	// DANGER (MUST SET MANUALLY)
 	//void ChangeValueToColor2(double maxValue, double minValue, double Value, float & nRed, float & nGreen, float & nBlue);
-	double myVec[882][3];// [2] = { 0.3,0.9 };
+	double myVec[50][3];// [2] = { 0.3,0.9 };
 	//void CreatemyVec(double* &myVec, int myVecRow);
 	//void DeletemyVec(double* &myVec)
 
