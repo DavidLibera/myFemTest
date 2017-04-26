@@ -11,6 +11,7 @@
 #include "stdafx.h"
 
 CFEADlg::CFEADlg() : CDialog(CFEADlg::IDD)
+//, m_sMeshType(_T(""))
 {
 	std::cout << "CONSTRUCTOR: Dyn Alloc Space for class FEM" << std::endl;
 	pFEM = new FEM();
@@ -19,12 +20,15 @@ CFEADlg::CFEADlg() : CDialog(CFEADlg::IDD)
 CFEADlg::~CFEADlg()
 {
 	std::cout << "DESTRUCTOR: deleting Dyn Alloc Space for class FEM" << std::endl;
+	//pFEM->Destroy(); Maybe unnecessary?
 	delete pFEM;
 }
 
 void CFEADlg::DoDataExchange(CDataExchange* pDX)
 {
 	CDialog::DoDataExchange(pDX);
+	//DDX_Control(pDX, IDC_MESHTYPE, m_MeshType);
+	//DDX_Control(pDX, IDC_BUTTON5, m_buttonMeshType);
 }
 
 BEGIN_MESSAGE_MAP(CFEADlg, CDialog)
@@ -32,6 +36,7 @@ BEGIN_MESSAGE_MAP(CFEADlg, CDialog)
 	ON_BN_CLICKED(IDC_SETPROPS, &CFEADlg::OnBnClickedSetprops)
 	ON_BN_CLICKED(IDC_ANALYZE, &CFEADlg::OnBnClickedAnalyze)
 	ON_BN_CLICKED(IDC_BUTTON4, &CFEADlg::OnBnClickedButton4)
+	//ON_BN_CLICKED(IDC_BUTTON5, &CFEADlg::OnBnClickedButton5)
 END_MESSAGE_MAP()
 
 // App command to run the dialog
@@ -69,17 +74,29 @@ void CFEADlg::OnBnClickedSetprops()
 	std::cout << "CFEADlg::OnBnClickedSetprops" << std::endl;
 }
 
-
-
 void CFEADlg::OnBnClickedAnalyze()
 {
-	// TODO: Add your control notification handler code here
 	pFEM->MainFunction();
 }
 
-
 void CFEADlg::OnBnClickedButton4()
 {
-	// TODO: Add your control notification handler code here
 	pFEM->colorFaces();
 }
+
+
+//void CFEADlg::OnBnClickedButton5()
+//{
+//	// TODO: Add your control notification handler code here
+//	//m_sMeshType = m_MeshType.se
+//	CString str;
+//	m_MeshType.GetWindowTextA(str);
+//	//MessageBox(str);
+//	if (str == "Quad(Q4)") {
+//		//pFEM->setMeshType(4);
+//		MessageBox(str);
+//	}
+//	if (str == "Triangular(T3)")
+//		MessageBox(str);
+//	//std::cout << m_sMeshType << std::endl;
+//}

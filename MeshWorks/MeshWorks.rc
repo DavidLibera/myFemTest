@@ -533,12 +533,11 @@ FONT 8, "MS Shell Dlg", 400, 0, 0x1
 BEGIN
     DEFPUSHBUTTON   "OK",IDOK,198,155,50,14
     PUSHBUTTON      "Cancel",IDCANCEL,252,155,50,14
-    PUSHBUTTON      "Select Boundary Conditions",IDC_SELECTBCS,89,46,133,14
-    PUSHBUTTON      "Set Properties",IDC_SETPROPS,129,25,50,14
-    PUSHBUTTON      "Analyze",IDC_ANALYZE,129,66,50,14
-    LTEXT           "WARNING!!!: DO NOT USE IF MESH IS LARGE",IDC_STATIC,91,7,148,8
-    PUSHBUTTON      "Color Elements",IDC_BUTTON4,113,105,78,14
-    LTEXT           "Click only if myVec[nFaces][3] is set correctly nFaces set manually for now",IDC_STATIC,29,94,249,8
+    PUSHBUTTON      "Select Boundary Conditions",IDC_SELECTBCS,87,85,133,14
+    PUSHBUTTON      "Set Properties",IDC_SETPROPS,127,66,50,14
+    PUSHBUTTON      "Analyze",IDC_ANALYZE,125,103,50,14
+    PUSHBUTTON      "Color Elements",IDC_BUTTON4,113,132,78,14
+    LTEXT           "Click only if myVec[nFaces][3] is set correctly nFaces set manually for now",IDC_STATIC,31,121,249,8
 END
 
 

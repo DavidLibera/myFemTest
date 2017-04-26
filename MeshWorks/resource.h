@@ -55,6 +55,7 @@
 #define IDC_EDIT4                       1043
 #define IDC_EDIT5                       1044
 #define IDC_EDIT6                       1045
+#define IDC_CHECK1                      1045
 #define IDC_EDIT7                       1046
 #define ID_FILE_IMPORT                  32771
 #define ID_IMPORT_LDI                   32772
@@ -176,9 +177,9 @@
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        138
+#define _APS_NEXT_RESOURCE_VALUE        139
 #define _APS_NEXT_COMMAND_VALUE         32894
-#define _APS_NEXT_CONTROL_VALUE         1042
+#define _APS_NEXT_CONTROL_VALUE         1046
 #define _APS_NEXT_SYMED_VALUE           104
 #endif
 #endif

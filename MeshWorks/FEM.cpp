@@ -75,15 +75,14 @@ void FEM::PrintVector(double* &a, int row) {
 // Setting
 
 void FEM::setProps() {
-	std::cout << "FEM::setProps()" << std::endl;
-	/*
+	
 	t = 0.5; // thickness
 	E = 30e6; // modulus
 	v = 0.25; // poissons
-	*/
-	t = .001; //m 
-	E = 200e9; // 1 GPA = 1e9 Pa 
-	v = 0.3;
+	
+	//t = .001; //m 
+	//E = 200e9; // 1 GPA = 1e9 Pa 
+	//v = 0.3;
 }
 
 void FEM::setNodeMatrix() {
@@ -123,9 +122,15 @@ void FEM::setConnMatrix() {
 		matConn[c][0] = (pFace->GetNodeRecordPtr(1))->GetIndexNo();
 		matConn[c][1] = (pFace->GetNodeRecordPtr(2))->GetIndexNo();
 		matConn[c][2] = (pFace->GetNodeRecordPtr(3))->GetIndexNo();
+		if(meshType == 1 ) // Q4 element
+			matConn[c][3] = (pFace->GetNodeRecordPtr(4))->GetIndexNo();
 		c = c + 1;
 	}
 }
+
+//void FEM::setMeshType(int a) {
+//	meshType = a;
+//}
 
 void FEM::setDMatrix() {
 	// stress-strain matrix
@@ -144,11 +149,10 @@ void FEM::setBCs() {
 	// FOR GENERAL CASE
 
 	// CASE 1: DANGER (ONLY FOR SQUARE MESH) affected nodes and ONLY SELF MADE MESH will make sense
-	
+
     //Y-displacement is zero at edge 
 	int DOF1 = sqrt(nNodes) * 2;
 	//int DOF2 = sqrt(nNodes) * 2 - 1;
-	// upper d = 0 
 	int DOF3 = (nNodes - sqrt(nNodes) + 1) * 2;		// NOTE: DANGER I AM ASSUMING nNodes is a square number
 	int DOF4 = (nNodes - sqrt(nNodes) + 1) * 2 - 1;
 	// lower d = 0 
@@ -174,10 +178,8 @@ void FEM::setBCs() {
 	f[FORCEDOF-1] = 1225; // Fy at node 3 is 1225
 	//f[FORCEDOF - 2] = -1225; // Fx
 
-	
 
 	// CASE 2: FOR PLATE WITH HOLE 
-
 	/*
 	// Isol: an array that mimics vector Isol (required form for FEM) 
 	std::vector<int> listNodesExclude = { 2, 5, 7, 3, 6, 4, 8, 1 }; 
@@ -205,10 +207,8 @@ void FEM::setBCs() {
 	}
 
 	// Set Isol to vector
-	std::cout << "printing Isol" << std::endl;
 	for (int i = 0; i < listDOFInclude.size(); i++) {
 		Isol[i] = listDOFInclude[i];
-		std::cout << "Isol[i]" << Isol[i] << std::endl;
 	}
 
 	//set force vector
@@ -223,10 +223,89 @@ void FEM::setBCs() {
 	f[2 * 242 - 2] = 1500;
 	f[2 * 250 - 2] = 1500;
 	*/
-
-	// CASE 3: PLATE IN TENSILE	 
-	/*
+	// CASE 3: THIN BEAM IN TENSILE	 
 	// case 3 by 10 and 10 by 50(using vectors)
+	//std::vector<int> listNodesExclude = { 20,40,60,80,100,120 };
+	/*
+	std::vector<int> listNodesExclude = { 50,100,150,200,250,300,350,400,450,500 };
+	//std::vector<int> listNodesExclude = { 100,200,300,400,500,600,700,800,900,,200,250,300,350,400,450,500 }; (TOOO BIG)
+	std::vector<int> listDOFInclude;
+
+	// setting listDOFInclude 
+	for (int i = 0; i < nDOF; i++) {
+		listDOFInclude.push_back(i + 1);
+	}
+
+	// eliminating values from listDOFInclude from list listNodes Include (both x and y components) 
+	int my_int;
+	for (int i = 0; i < listNodesExclude.size(); i++) {
+		for (int j = 0; j < 2; j++) {
+			if (j == 0)
+				my_int = listNodesExclude[i] * 2;
+			else
+				my_int = listNodesExclude[i] * 2 - 1;
+
+			auto it = std::find(listDOFInclude.begin(), listDOFInclude.end(), my_int);
+			if (it != listDOFInclude.end()) {
+				listDOFInclude.erase(it);
+			}
+		}
+	}
+
+	// Copy content of vector to Isol[]
+	
+	//std::cout << "printing Isol" << std::endl;
+	for (int i = 0; i < listDOFInclude.size(); i++) {
+		Isol[i] = listDOFInclude[i];
+	}
+
+	double Force = 2000 / 2; //listNodesExclude.size();  //total force divided equally between # nodes at edge
+
+	//std::cout << "Force: " << Force << std::endl;
+
+	//f[1 * 2 - 2] = -Force;
+	//f[21 * 2 - 2] =-Force;
+	//f[41 * 2 - 2] =-Force;
+	//f[61 * 2 - 2] =-Force;
+	//f[81 * 2 - 2] =-Force;
+	//f[101 * 2 - 2] =-Force;
+
+	//f[1 * 2 - 2]   =-Force;
+	//f[51 * 2 - 2]  =-Force;
+	//f[101 * 2 - 2] = Force; 
+	//f[151 * 2 - 2] =-Force;
+	f[201 * 2 - 2] =-Force;
+	f[251 * 2 - 2] =-Force;
+	//f[301 * 2 - 2] =-Force;
+	//f[351 * 2 - 2] =-Force;
+	//f[401 * 2 - 2] =-Force;
+	//f[451 * 2 - 2] =-Force;
+
+	// 20 by 100 case (TOO BIG) 
+	//f[1 * 2 - 2]   =-Force;
+	//f[51 * 2 - 2]  =-Force;
+	//f[101 * 2 - 2] = Force; 
+	//f[151 * 2 - 2] =-Force;
+	//f[201 * 2 - 2] = -Force;
+	//f[251 * 2 - 2] = -Force;
+	//f[301 * 2 - 2] =-Force;
+	//f[351 * 2 - 2] =-Force;
+	//f[401 * 2 - 2] =-Force;
+	//f[451 * 2 - 2] =-Force;
+	//f[501 * 2 - 2] = -Force;
+	//f[551 * 2 - 2] = -Force;
+	//f[601 * 2 - 2] = Force;
+	//f[651 * 2 - 2] = -Force;
+	//f[701 * 2 - 2] = -Force;
+	//f[751 * 2 - 2] = -Force;
+	//f[801 * 2 - 2] = -Force;
+	//f[851 * 2 - 2] = -Force;
+	//f[901 * 2 - 2] = -Force;
+	//f[951 * 2 - 2] = -Force;
+	*/
+
+	// CASE 4: Euler Bernouilli 
+	/*
 	std::vector<int> listNodesExclude = { 50,100,150,200,250,300,350,400,450,500 };//{20,40,60,80,100,120};
 	std::vector<int> listDOFInclude;
 
@@ -252,33 +331,25 @@ void FEM::setBCs() {
 	}
 
 	// Copy content of vector to Isol[]
-	std::cout << "printing Isol" << std::endl;
+
+	//std::cout << "printing Isol" << std::endl;
 	for (int i = 0; i < listDOFInclude.size(); i++) {
 		Isol[i] = listDOFInclude[i];
 	}
 
-	double Force = 2000/listNodesExclude.size();  //total force divided equally between # nodes at edge
+	double Force = 2000 / listNodesExclude.size();  //total force divided equally between # nodes at edge
 
-	std::cout << "Force: " << Force << std::endl;
-
-	//f[1 * 2 - 2] = -Force;
-	//f[21 * 2 - 2] =-Force;
-	//f[41 * 2 - 2] =-Force;
-	//f[61 * 2 - 2] =-Force;
-	//f[81 * 2 - 2] =-Force;
-	//f[101 * 2 - 2] =-Force;
-
-	f[1 * 2 - 2]   =-Force;
-	f[51 * 2 - 2]  =-Force;
-	f[101 * 2 - 2] = Force; 
-	f[101 * 2 - 2] =-Force;
-	f[151 * 2 - 2] =-Force;
-	f[201 * 2 - 2] =-Force;
-	f[251 * 2 - 2] =-Force;
-	f[301 * 2 - 2] =-Force;
-	f[351 * 2 - 2] =-Force;
-	f[401 * 2 - 2] =-Force;
-	f[451 * 2 - 2] =-Force;
+	// Shear force on side of beam (distributed equally on each node)
+	f[1 * 2 - 1] = -Force;
+	f[51 * 2 - 1] = -Force;
+	f[101 * 2 - 1] = Force;
+	f[151 * 2 - 1] = -Force;
+	f[201 * 2 - 1] = -Force;
+	f[251 * 2 - 1] = -Force;
+	f[301 * 2 - 1] = -Force;
+	f[351 * 2 - 1] = -Force;
+	f[401 * 2 - 1] = -Force;
+	f[451 * 2 - 1] = -Force;
 	*/
 
 }
@@ -286,10 +357,62 @@ void FEM::setBCs() {
 
 // Computing
 
-void FEM::computeKMatrix() {
+double FEM::integral(double(*f)(double x), double a, double b, int n) {
+	double step = (b - a) / n;  // width of each small rectangle
+	double area = 0.0;  // signed area
+	for (int i = 0; i < n; i++) {
+		area += f(a + (i + 0.5) * step) * step; // sum up each small rectangle
+	}
+	return area;
+}
+
+void FEM::computeKMatrixQ4() {
+	int n1, n2, n3, n4;
+	double x1, y1, x2, y2, x3, y3, x4, y4;
+
+	for (int element = 0; element < nFaces; element++) {
+		// Extracting node number from matConn matrix
+		n1 = matConn[element][0];
+		n2 = matConn[element][1];
+		n3 = matConn[element][2];
+		n4 = matConn[element][3];
+
+		// Using node number from above to access x,y coordinates (Note: index starts is 1 less for matrices, hence the -1)
+		x1 = matNodes[n1 - 1][0]; y1 = matNodes[n1 - 1][1];
+		x2 = matNodes[n2 - 1][0]; y2 = matNodes[n2 - 1][1];
+		x3 = matNodes[n3 - 1][0]; y3 = matNodes[n3 - 1][1];
+		x4 = matNodes[n4 - 1][0]; y4 = matNodes[n4 - 1][1];
+
+		// compute Jacobian 
+		double dxds, dxdt, dyds, dydt;
+		dxds = 0.25*x1 - 0.25*x2 - 0.25*x3 + 0.25*x4; // sum (dNi/ds xi) 
+		dxdt = 0.25*x1 + 0.25*x2 - 0.25*x3 - 0.25*x4; // ^--> t terms cancel i.e constant
+		dyds = 0.25*y1 - 0.25*y2 - 0.25*y3 + 0.25*y4;
+		dydt = 0.25*y1 + 0.25*y2 - 0.25*y3 - 0.25*y4;
+		J[0][0] = dxds; J[0][1] = dyds;
+		J[1][0] = dxdt; J[1][1] = dydt;
+
+		GLKMatrixLib::Inverse(J, Jrow); 
+		//Note: does not need to be dynamic memory, but then will Inverse function work (**a) parameter ?  
+
+		// compute dNi/dx dNi/dy for B matrix (Ke is 8x8 matrix)
+		double B1[3] = { 0,0,0 };
+		double B2[3] = { 0,0,0 };
+
+		// Compute each entry of elemental stiffness matrix
+		for (int i = 0; i < 8; i++) {
+			for (int j = 0; j < 8; j++) {
+				//compute B1 and B2 using Jacobian + set to s=-1/3 t =1/3 for gaussian integration 
+				//compute B1DB2
+			}
+		}
+	}
+}
+
+void FEM::computeKMatrixT3() {
 
 	int n1, n2, n3;
-	double x1, y1, z1, x2, y2, z2, x3, y3, z3;
+	double x1, y1, x2, y2, x3, y3;
 	double b1, b2, b3, c1, c2, c3, A;
 
 	for (int element = 0; element < nFaces; element++) {
@@ -301,7 +424,6 @@ void FEM::computeKMatrix() {
 
 		// Using node number from above to access x,y coordinates (Note: index starts is 1 less for matrices, hence the -1)
 		x1 = matNodes[n1 - 1][0]; y1 = matNodes[n1 - 1][1];
-
 		x2 = matNodes[n2 - 1][0]; y2 = matNodes[n2 - 1][1];
 		x3 = matNodes[n3 - 1][0]; y3 = matNodes[n3 - 1][1];
 
@@ -336,14 +458,15 @@ void FEM::computeKMatrix() {
 
 }
 
-void FEM::computeStress() {
+void FEM::computeStress()
+{
 
 	int n1, n2, n3;
 	double b1, b2, b3, c1, c2, c3, x1, x2, x3, y1, y2, y3, A;
 
 	//openfile for extracting data for MATLAB
 	std::ofstream myfile;
-	myfile.open("example.txt");
+	myfile.open("stresses.txt");
 
 	for (int element = 0; element < nFaces; element++) {
 		n1 = matConn[element][0];
@@ -364,7 +487,7 @@ void FEM::computeStress() {
 		x3 = matNodes[n3 - 1][0]; y3 = matNodes[n3 - 1][1];
 
 		// Computing area of element
-		A = 0.5*((x2*y3 - x3*y2) + (x3*y1 - x1*y3) + (x1*y2 - x2*y1)); // needs an absolute sign
+		A = abs(0.5*((x2*y3 - x3*y2) + (x3*y1 - x1*y3) + (x1*y2 - x2*y1))); // needs an absolute sign
 
 																	   // Computing elements of matrix B
 		b1 = y2 - y3; b2 = y3 - y1; b3 = y1 - y2;
@@ -384,15 +507,18 @@ void FEM::computeStress() {
 		double vonMises = computeVonMises();
 		vonMisVec[element] = vonMises;
 
-		toFile(element, sige[0], sige[1], sige[2], vonMises,myfile);
+		double xavg = (x1 + x2 + x3) / 3;
+		double yavg = (y1 + y2 + y3) / 3;
+		toFile(element, xavg,yavg,sige[0], sige[1], sige[2], vonMises,myfile);
 
 		//Print stresses
 		
-		if (element % 200 == 0) {
-			std::cout << "Sige:" << std::endl;
-			PrintVector(sige, sigerow);
-			std::cout << "vonMises of element:" << element << "is " << vonMises << std::endl;
-		}
+		//if (element % 200 == 0) {
+		//	std::cout << "Sige:" << std::endl;
+		//	PrintVector(sige, sigerow);
+		//	std::cout << "vonMises of element:" << element << "is " << vonMises << std::endl;
+		//}
+		
 	}
 
 }
@@ -403,6 +529,8 @@ double FEM::computeVonMises() {
 
 	return sqrt((pow((sige[0] - sige[1]), 2) + pow(sige[0], 2) + pow(sige[1], 2) + 6 * pow(sige[2], 2)) / 2);
 }
+
+
 
 // Scattering
 
@@ -547,9 +675,13 @@ void FEM::MainFunction() {
 	setConnMatrix();
 	setDMatrix();
 
-	//Compute K matrix
-	computeKMatrix();
+	//PrintMatrix(matNodes, matNodesRow, matNodesCol);
+	//PrintMatrix(matConn, matConnRow, matConnCol);
 
+	//Compute K matrix
+	if (meshType == 0) { computeKMatrixT3(); }
+	if (meshType == 1) { computeKMatrixQ4(); }
+	/*
 	//Set BCS
 	setBCs();
 
@@ -557,57 +689,38 @@ void FEM::MainFunction() {
 	scatterKmod(K, Kmod);
 	scatterfmod(f, fmod);
 
-
-	//std::cout << "Kmod" << std::endl;
-	//PrintMatrix(Kmod, Kmodrow, Kmodcol);
-	//std::cout << "fmod" << std::endl;
-	//PrintVector(fmod, fmodrow);
-	
-
 	//Solve system of equations
-
-	//bool doesSystemSolve = GLKMatrixLib::GaussSeidelSolver(Kmod, fmod, vars, dmod,1e-6);
 	bool doesSystemSolve = GLKMatrixLib::GaussJordanElimination(Kmod, vars, fmod);
-
-	std::cout << "bool doesSystemSolve =" << doesSystemSolve << std::endl;
-	//Note: in GaussJordan solver, b vector becomes the output vector hence fmod contains dmod solution
+	//bool doesSystemSolve = GLKMatrixLib::GaussSeidelSolver(Kmod, fmod, vars, dmod,1e-6);
 	scatterBackDisplacements(fmod, d);
 
-	//std::cout << "d: " << std::endl;
-	//PrintVector(d, drow);
-
-	//std::cout << "d" << std::endl;
-	//PrintVector(d, drow);
+	std::cout << "bool doesSystemSolve =" << doesSystemSolve << std::endl;
 
 	//Compute Stresses
-
+	
 	computeStress();
 
 	// POST PROCESSING **************************************
 
 	//Normalize vonMisVec (first find max value, then divide all by it)
+	//double maxVM = 0.0;
+	//int maxVMindex = 0;
+	//for (int i = 0; i < nFaces; i++) {
+	//	if (vonMisVec[i] > maxVM) {
+	//		maxVM = vonMisVec[i];
+	//		maxVMindex = i;
+	//	}
 
-	double maxVM = 0.0;
-	int maxVMindex = 0;
-	for (int i = 0; i < nFaces; i++) {
-		if (vonMisVec[i] > maxVM) {
-			maxVM = vonMisVec[i];
-			maxVMindex = i;
-		}
-
-	}
+	//}
 
 
-	//Print
-	//std::cout << " Printing values passed to color map CASE: Normalized Von Mises" << std::endl;
-	//PrintVector(vonMisVec, vonMisVecrow);
+	//std::cout << "Max VM (Pa): " << maxVM << "at Face index" << maxVMindex << std::endl;
 
-	std::cout << "Max VM (Mpa): " << maxVM/1e6 << "at Face index" << maxVMindex << std::endl;
-
-	for (int i = 0; i < nFaces; i++) {
-		vonMisVec[i] = 1.0 - (vonMisVec[i]/ maxVM);
-	}
-
+	//for (int i = 0; i < nFaces; i++) {
+	//	vonMisVec[i] = 1.0 - (vonMisVec[i]/ maxVM);
+	//}
+	*/
+	
 	std::cout << "END OF FEM" << std::endl;
 
 	//Print
@@ -641,6 +754,9 @@ void FEM::MainFunction() {
 }
 
 
+
+
+
 // Post-processing
 void FEM::colorFaces() {
 	std::cout << "colorFaces" << std::endl;
@@ -659,8 +775,8 @@ void FEM::openFile() {
 	myfile.open("example.txt");
 }
 
-void FEM::toFile(int face, double sigx, double sigy, double tauxy, double vonMis, std::ofstream& myfile) {
-	myfile << face << " " << sigx << " " << sigy << " " << tauxy << " " << vonMis << std::endl;
+void FEM::toFile(int face, double xavg, double yavg, double sigx, double sigy, double tauxy, double vonMis, std::ofstream& myfile) {
+	myfile << face << " " << xavg << " " << yavg << " " << sigx << " " << sigy << " " << tauxy << " " << vonMis << std::endl;
 }
 
 
@@ -676,6 +792,7 @@ void FEM::Create() {
 	CreateVector(d, drow);
 	GLKMatrixLib::CreateMatrix(K, Krow, Kcol);
 	GLKMatrixLib::CreateMatrix(Ke, Kerow, Kecol);
+	GLKMatrixLib::CreateMatrix(J, Jrow, Jcol);
 
 	// Solving System of Equations
 	CreateVectorIsol(Isol, Isolrow);
@@ -706,6 +823,7 @@ void FEM::Destroy() {
 	DeleteVector(d);
 	GLKMatrixLib::DeleteMatrix(K, Krow, Kcol);
 	GLKMatrixLib::DeleteMatrix(Ke, Kerow, Kecol);
+	GLKMatrixLib::DeleteMatrix(J, Jrow, Jcol);
 
 	// Solving system of equations
 	DeleteVectorIsol(Isol);

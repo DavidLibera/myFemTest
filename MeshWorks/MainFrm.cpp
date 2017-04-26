@@ -847,11 +847,6 @@ void CMainFrame::ChangeColor(double* &vec, int vecRow)
 	CMeshWorksDoc *pDoc = (CMeshWorksDoc *)GetActiveDocument();
 	GetMainView()->GetGLKernelView()->m_FEAON = true;
 
-	// array vec read succesfully
-	//for (int i = 0; i < vecRow; i++) {
-	//	std::cout << vec[i] << std::endl;
-	//}
-
 	// Acquiring max, min for color map using ChangeValueToColor
 	double vecMax=0.0, vecMin = vec[0];
 	for (int i = 0; i < vecRow; i++) {
@@ -859,50 +854,20 @@ void CMainFrame::ChangeColor(double* &vec, int vecRow)
 		if (vec[i] < vecMin) { vecMin = vec[i]; }
 	}
 
-	// TESTING
-	std::cout << "vecMax is " << vecMax << std::endl;
-	std::cout << "vecMin is " << vecMin << std::endl;
-
-
-
 	// Need access to QBody through pointer
 	float red, green, blue;
-
 	for (POSITION Pos = (pDoc->m_meshList).GetHeadPosition(); Pos != NULL;) {
-
 		QBody *patch = (QBody *)((pDoc->m_meshList).GetNext(Pos));
-		
+
 		for (int i = 0; i < vecRow; i++) {
 
 			ChangeValueToColor2(vecMax, vecMin, vec[i],red, green, blue); //WORKS POORLY RANDOM COLORS EVERYWHERE
 			// getValueBetweenTwoFixedColors(vec[i], red, green, blue);    WORKS VERY POORLY HEAT MAP  http://www.andrewnoske.com/wiki/Code_-_heatmaps_and_color_gradients
 			patch->myVec[i][0] = red;//vec[i]; // simplest and ok 
 			patch->myVec[i][1] = green;//vec[i];// vec[i]; //green/ 255;
-			patch->myVec[i][2] = blue;//vec[i]; // blue / 255;
-
-			// TESTING 
-			//std::cout << patch->myVec[i] << std::endl;
 		}
-
 	}
-
-	// Need allocate memory, and populate myVec with vonMisesVec  
-	
-	// Note: DeletemyVec will take place in destructor of QBody???
-
-	
-		//safety counter 
-	//int c = 1;
-	//for (POSITION Pos = (pDoc->m_meshList).GetHeadPosition(); Pos != NULL;) {
-	//	QBody *patch = (QBody *)((pDoc->m_meshList).GetNext(Pos));
-
-	//	patch->drawShade2();
-
 	GetMainView()->GetGLKernelView()->refresh();
-	//	c = c + 1;
-	//	if (c == 20) { break; }
-
-	//}
 }
 
 // FOR FEA
