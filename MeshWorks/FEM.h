@@ -17,20 +17,17 @@ public:
 		nNodes = getNumberOfNodes();
 		nFaces = getNumberOfFaces();
 		nDOF = nNodes * 2;
-		meshType = 1;
 
 		//Initializing Matrices/Vectors
 		matNodesRow = nNodes; matNodesCol = 2;
-		matConnRow = nFaces; 
-		if (meshType == 0) { matConnCol = 3; }//meshType;
-		if (meshType == 1) { matConnCol = 4; }//meshType;
 		Drow = 3; Dcol = 3;
 		Brow = 3; Bcol = 6;
 		frow = nDOF;
 		drow = nDOF;
 		Krow = nDOF; Kcol = nDOF;
-		Kerow = 6; Kecol = 6;
+		//Kerow = 6; Kecol = 6;
 		Jrow = 2; Jcol = 2;
+		B1row = 3; B2row = 3;
 
 		//Initializing for solver
 		vars = nDOF - 5; // unknowns (DEPENDS ON BCS) ************************************************
@@ -49,7 +46,13 @@ public:
 		BTrow = Bcol; BTcol = Brow;
 		trow = 6; tcol = 3;
 		t2row = 3; t2col = 6;
+		t3row = 3;
 		vonMisVecrow = nFaces;
+
+		// Initializing matConn Pointer to NULL (this determines whether to deallocate) 
+		matConn = NULL;
+		Ke = NULL;
+		Me = NULL; 
 
 		Create();
 	};
@@ -66,18 +69,21 @@ public:
 	void PrintVector(double* &a, int row);
 
 	// Setting
+	int getMeshType();
 	void setProps();
 	void setNodeMatrix();
 	void setConnMatrix();
 	//void setMeshType(int a);
 	void setDMatrix(); // strain-stress matrix
 	void setBCs();
+	void setShapeFunctionTable(); // for Q4 gaussian-integration
 
 	// Computing
 	void computeKMatrixT3();
 	void computeKMatrixQ4();
+	void selectB1B2(int i, int j, int k, double B1[3], double B2[3]);
 	double integral(double(*f)(double x), double a, double b, int n);
-	void scatter(double** &Ke, double** &K, int n1, int n2, int n3);
+	void scatter(double** &Ke, double** &K, int n1, int n2, int n3,int n4);
 	void scatterKmod(double** &K, double** &Kmod);
 	void scatterfmod(double* &f, double* &fmod);
 	void scatterBackDisplacements(double* &dmod, double* &d);
@@ -114,7 +120,7 @@ public:
 
 	// Matrices/Vectors
 	double** matNodes; int matNodesRow,matNodesCol;
-	double** matConn;  int matConnRow,matConnCol;
+	double** matConn;  int matConnRow, matConnCol;
 	double** D;  int Drow, Dcol;
 	double** B;  int Brow, Bcol;
 	double* f;   int frow;
@@ -122,6 +128,9 @@ public:
 	double** K;  int Krow, Kcol;
 	double** Ke; int Kerow, Kecol;
 	double** J; int Jrow, Jcol;
+	double** Me; int Merow, Mecol;
+	double* B1; int B1row;
+	double* B2; int B2row;
 
 	// Matrices/Vectors for solving systems
 	int vars;
@@ -138,6 +147,7 @@ public:
 	double** BT;			int BTrow,BTcol;
 	double**temp;			int trow,tcol;
 	double**temp2;          int t2row, t2col;
+	double* temp3;			int t3row;
 	double* vonMisVec;      int vonMisVecrow;
 
 };

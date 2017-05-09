@@ -17,7 +17,7 @@ public:
 
 protected:
 	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV support
-
+	virtual BOOL OnInitDialog();
 														// Implementation
 protected:
 	DECLARE_MESSAGE_MAP()
@@ -32,9 +32,9 @@ public:
 
 	afx_msg void OnBnClickedAnalyze();
 	afx_msg void OnBnClickedButton4();
-	//afx_msg void OnBnClickedButton5();
-	//CComboBox m_MeshType;
-	//CString m_sMeshType;
-	//CButton m_buttonMeshType;
+
+	CButton m_buttonAnalyze;
+	afx_msg void OnBnClickedRadio1();
+	afx_msg void OnBnClickedRadio2();
 };
 

@@ -10,8 +10,16 @@
 #include "MeshWorksDoc.h"
 #include "stdafx.h"
 
+#ifdef _DEBUG
+#define new DEBUG_NEW
+#endif
+
 CFEADlg::CFEADlg() : CDialog(CFEADlg::IDD)
 //, m_sMeshType(_T(""))
+//, m_buttonT3Val(FALSE)
+//, m_buttonQ4Val(FALSE)
+//, m_T3(false)
+//, m_Q4(false)
 {
 	std::cout << "CONSTRUCTOR: Dyn Alloc Space for class FEM" << std::endl;
 	pFEM = new FEM();
@@ -27,16 +35,28 @@ CFEADlg::~CFEADlg()
 void CFEADlg::DoDataExchange(CDataExchange* pDX)
 {
 	CDialog::DoDataExchange(pDX);
-	//DDX_Control(pDX, IDC_MESHTYPE, m_MeshType);
-	//DDX_Control(pDX, IDC_BUTTON5, m_buttonMeshType);
+
+	//DDX_Control(pDX, IDCANCEL, m_buttonMeshType);
+	DDX_Control(pDX, IDC_ANALYZE, m_buttonAnalyze);
 }
+
+BOOL CFEADlg::OnInitDialog() {
+	CDialog::OnInitDialog();
+	CWnd *butAnalyze = GetDlgItem(IDC_ANALYZE);
+	if (butAnalyze) {
+		butAnalyze->EnableWindow(FALSE);
+	}
+	return TRUE;
+}
+
 
 BEGIN_MESSAGE_MAP(CFEADlg, CDialog)
 	ON_BN_CLICKED(IDC_SELECTBCS, &CFEADlg::OnBnClickedSelectbcs)
 	ON_BN_CLICKED(IDC_SETPROPS, &CFEADlg::OnBnClickedSetprops)
 	ON_BN_CLICKED(IDC_ANALYZE, &CFEADlg::OnBnClickedAnalyze)
 	ON_BN_CLICKED(IDC_BUTTON4, &CFEADlg::OnBnClickedButton4)
-	//ON_BN_CLICKED(IDC_BUTTON5, &CFEADlg::OnBnClickedButton5)
+	ON_BN_CLICKED(IDC_RADIO1, &CFEADlg::OnBnClickedRadio1)
+	ON_BN_CLICKED(IDC_RADIO2, &CFEADlg::OnBnClickedRadio2)
 END_MESSAGE_MAP()
 
 // App command to run the dialog
@@ -49,6 +69,7 @@ void CMeshWorksApp::OnAppFEA()
 
 	CFEADlg FEADlg;
 	FEADlg.DoModal();
+	
 }
 
 
@@ -56,7 +77,7 @@ void CMeshWorksApp::OnAppFEA()
 void CFEADlg::OnBnClickedSelectbcs()
 {
 	std::cout << "Setting boundaries conditions" << std::endl;
-	pFEM->setBCs(); //WONT WORK YET, because Create() is called in MainFunction()
+	//pFEM->setBCs(); //WONT WORK YET, because Create() is called in MainFunction()
 }
 
 void CFEADlg::OnBnClickedSetprops()
@@ -77,6 +98,10 @@ void CFEADlg::OnBnClickedSetprops()
 void CFEADlg::OnBnClickedAnalyze()
 {
 	pFEM->MainFunction();
+
+	//CString str;
+	//str.Format("As string: %g", pFEM->E);
+	//MessageBox(str);
 }
 
 void CFEADlg::OnBnClickedButton4()
@@ -85,18 +110,30 @@ void CFEADlg::OnBnClickedButton4()
 }
 
 
-//void CFEADlg::OnBnClickedButton5()
-//{
-//	// TODO: Add your control notification handler code here
-//	//m_sMeshType = m_MeshType.se
-//	CString str;
-//	m_MeshType.GetWindowTextA(str);
-//	//MessageBox(str);
-//	if (str == "Quad(Q4)") {
-//		//pFEM->setMeshType(4);
-//		MessageBox(str);
-//	}
-//	if (str == "Triangular(T3)")
-//		MessageBox(str);
-//	//std::cout << m_sMeshType << std::endl;
-//}
+
+
+
+void CFEADlg::OnBnClickedRadio1()
+{
+	// TODO: Add your control notification handler code here
+	pFEM->meshType = 0; 
+
+	CWnd *butAnalyze = GetDlgItem(IDC_ANALYZE);
+	if (butAnalyze) {
+		butAnalyze->EnableWindow(TRUE);
+	}
+	UpdateData(FALSE);
+}
+
+
+void CFEADlg::OnBnClickedRadio2()
+{
+	// TODO: Add your control notification handler code here
+	pFEM->meshType = 1;
+
+	CWnd *butAnalyze = GetDlgItem(IDC_ANALYZE);
+	if (butAnalyze) {
+		butAnalyze->EnableWindow(TRUE);
+	}
+	UpdateData(FALSE);
+}

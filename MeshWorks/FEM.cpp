@@ -18,6 +18,10 @@
 #include <fstream>
 
 
+#ifdef _DEBUG
+#define new DEBUG_NEW
+#endif
+
 // Member functions of class FEM 
 
 
@@ -107,7 +111,55 @@ void FEM::setNodeMatrix() {
 	}
 }
 
+int FEM::getMeshType() {
+	
+	// Need pWnd to access GetActiveDocument and GetMainView unlike in CMainFrame:: functions 
+	CMainFrame *pWnd = (CMainFrame *)(AfxGetMainWnd());
+	CMeshWorksDoc *pDoc = (CMeshWorksDoc *)(pWnd->GetActiveDocument());
+	//CGLKernelView *cView = pWnd->GetMainView()->GetGLKernelView();
+
+	QBody * body = (QBody*)(pDoc->m_meshList).GetHead();
+	QMeshFace* pFace = (QMeshFace*)body->GetTrglFaceList().GetHead();
+
+	std::cout << "body->GetTrglFaceNumber()" << std::endl;
+	std::cout << body->GetTrglFaceNumber() << std::endl;
+	
+	////vector stores all index numbers
+	//std::vector<int> temp; 
+
+	//// considering first face/element in linked list
+	//GLKPOSITION Pos = body->GetTrglFaceList().GetHeadPosition();
+	//pFace = (QMeshFace*)body->GetTrglFaceList().GetNext(Pos);
+
+	//// initialize vector temp
+	//int c = 1;
+	//int index = (pFace->GetNodeRecordPtr(c))->GetIndexNo();
+	//temp.push_back(index);
+
+	//// create loop to count number of index before it repeats (max 7 node elements) 
+	//for (int c = 2; c <=5 ; c++) { // should break before it reaches 7 (otherwise error, program crashes) 
+	//	index = (pFace->GetNodeRecordPtr(c))->GetIndexNo();
+	//	//temp.push_back(index);
+
+	//	std::cout << index << std::endl; 
+
+	//	// check if index is in the vector already and return if so
+	//	//if (std::find(temp.begin(), temp.end(), index) != temp.end()) {
+	//	//	return c;
+	//	//	break;
+	//	//}
+	//}
+	return 0;
+}
+
 void FEM::setConnMatrix() {
+
+	// Allocating memory for matConn based on user input (Note: can't be in constructor) 
+	matConnRow = nFaces;
+	if (meshType == 0) { matConnCol = 3; }//meshType;
+	if (meshType == 1) { matConnCol = 4; }//meshType;
+	GLKMatrixLib::CreateMatrix(matConn, matConnRow, matConnCol);
+
 	// Need pWnd to access GetActiveDocument and GetMainView unlike in CMainFrame:: functions 
 	CMainFrame *pWnd = (CMainFrame *)(AfxGetMainWnd());
 	CMeshWorksDoc *pDoc = (CMeshWorksDoc *)(pWnd->GetActiveDocument());
@@ -367,6 +419,9 @@ double FEM::integral(double(*f)(double x), double a, double b, int n) {
 }
 
 void FEM::computeKMatrixQ4() {
+
+	std::cout << "Computing KMatrixQ4()" << std::endl;
+
 	int n1, n2, n3, n4;
 	double x1, y1, x2, y2, x3, y3, x4, y4;
 
@@ -383,31 +438,249 @@ void FEM::computeKMatrixQ4() {
 		x3 = matNodes[n3 - 1][0]; y3 = matNodes[n3 - 1][1];
 		x4 = matNodes[n4 - 1][0]; y4 = matNodes[n4 - 1][1];
 
+		// Compute area for integral
+		double A; 
+
 		// compute Jacobian 
 		double dxds, dxdt, dyds, dydt;
-		dxds = 0.25*x1 - 0.25*x2 - 0.25*x3 + 0.25*x4; // sum (dNi/ds xi) 
-		dxdt = 0.25*x1 + 0.25*x2 - 0.25*x3 - 0.25*x4; // ^--> t terms cancel i.e constant
-		dyds = 0.25*y1 - 0.25*y2 - 0.25*y3 + 0.25*y4;
-		dydt = 0.25*y1 + 0.25*y2 - 0.25*y3 - 0.25*y4;
+		dxds = -0.25*x1 + 0.25*x2 + 0.25*x3 - 0.25*x4; // sum (dNi/ds xi) 
+		dxdt = -0.25*x1 - 0.25*x2 + 0.25*x3 + 0.25*x4; // ^--> t terms cancel i.e constant
+		dyds = -0.25*y1 + 0.25*y2 + 0.25*y3 - 0.25*y4;
+		dydt = -0.25*y1 - 0.25*y2 + 0.25*y3 + 0.25*y4;
 		J[0][0] = dxds; J[0][1] = dyds;
 		J[1][0] = dxdt; J[1][1] = dydt;
+		
+		double detJ = J[0][0] * J[1][1] - J[0][1] * J[1][0];
 
 		GLKMatrixLib::Inverse(J, Jrow); 
 		//Note: does not need to be dynamic memory, but then will Inverse function work (**a) parameter ?  
+		PrintMatrix(J, Jrow, Jcol);
 
-		// compute dNi/dx dNi/dy for B matrix (Ke is 8x8 matrix)
-		double B1[3] = { 0,0,0 };
-		double B2[3] = { 0,0,0 };
+		// Computing table Me Matrix (compute dNi/dx dNi/dy for B matrix (Ke is 8x8 matrix))
+		setShapeFunctionTable();
 
-		// Compute each entry of elemental stiffness matrix
+		// Compute top half of elemental stiffness matrix (1 element at a time)
 		for (int i = 0; i < 8; i++) {
 			for (int j = 0; j < 8; j++) {
-				//compute B1 and B2 using Jacobian + set to s=-1/3 t =1/3 for gaussian integration 
-				//compute B1DB2
+				// summation loop
+				double sum = 0.0, fi = 0.0;
+				for (int k = 0; k < 4; k++) {
+
+					selectB1B2(i, j, k,B1,B2);
+
+					//std::cout << "____________________________________"<< std::endl;
+					//std::cout << "for i =" << i << "j = " << j << std::endl;
+					//std::cout << "B1:" << B1[0] << " " << B1[1] << " " << B1[2] << std::endl;
+					//std::cout << "B2:" << B2[0] << " " << B2[1] << " " << B2[2] << std::endl;
+					//std::cout << "temp3:" << temp3[0] << " " << temp3[1] << " " << temp3[2] << std::endl;
+
+					// Solve fi = B1.' D B2 (using GLKMatrixLib)
+					GLKMatrixLib::Transpose(D, 3); // doesn't matter for symmetric D matrix
+					GLKMatrixLib::Mul(D, B1,3,3,temp3);
+					GLKMatrixLib::Transpose(D, 3); // transpose D back?
+
+					//std::cout << "B1:" << B1[0] << B1[1] << B1[2] << std::endl;
+					//std::cout << "B2:" << B2[0] << B2[1] << B2[2] << std::endl;
+					//std::cout << "temp3:" << temp3[0] << temp3[1] << temp3[2] << std::endl;
+
+					fi = temp3[0]*B2[0]+temp3[1]*B2[1]+temp3[2]*B2[2];
+
+					sum = sum + fi;
+
+				}
+
+				Ke[i][j] = sum*detJ;
+
+				//std::cout << "Ke for i:"<< i << "and j:" << j << " " << Ke[i][j] << std::endl;
+
 			}
 		}
+
+		// Apply symmetry
+		//for (int i = 0; i < 8; i++) {
+		//	for (int j = 0; j < 8-i; j++) {
+		//		Ke[j][i] = Ke[i][j];
+		//	}
+		//}
+
+		// Scatter to global matrix (FOR LATER) (SEE SCATTER FUNCTIONS) 
+		scatter(Ke, K, n1, n2, n3, n4);
+
 	}
 }
+
+void FEM::setShapeFunctionTable() {
+	// Me is a table (8by4) of shape functions at gaussian quadrature values 
+	// Format: 
+	//	    (1/sq(3), 1/sq(3) ) (-1/sq(3), 1/sq(3) ) (-1/sq(3), -1/sq(3) ) (1/sq(3), -1/sq(3) ) 
+	// N1x
+	// N1y
+	// N2x
+	// ...
+	// N4y 
+
+	std::cout << "Setting ShapeFunctionTable()" << std::endl;
+
+	// Allocate memory (only if using Q4) 
+	Merow = 8; Mecol = 4;
+	GLKMatrixLib::CreateMatrix(Me, Merow, Mecol);
+	
+	double tt, ss; // local variables whereas x,y are global
+
+	// Compute table of Ni,x Ni,y 
+	// N1 = 0.25*(1-ss)*(1-tt)
+	// N2 = 0.25*(1+ss)*(1-tt)
+	// N3 = 0.25*(1+ss)*(1+tt)
+	// N4 = 0.25*(1-ss)*(1+tt)
+
+	double Nx, Ny;
+	// N1x N1y terms ONLY = invJ * N1s N1t (eval at 4 points/cases)
+	for (int i = 1; i <= 4; i++) {
+		switch (i) {
+		case 1: 
+				tt = 1 / sqrt(3); ss = 1 / sqrt(3);
+				Nx = J[0][0] * (-0.25*(1 - tt)) + J[0][1] * (-0.25*(1 - ss));
+				Ny = J[1][0] * (-0.25*(1 - tt)) + J[1][1] * (-0.25*(1 - ss));
+				Me[0][0] = Nx; Me[1][0] = Ny; 
+				break;
+		case 2:	
+				tt = -1 / sqrt(3); ss = 1 / sqrt(3);
+				Nx = J[0][0] * (-0.25*(1 - tt)) + J[0][1] * (-0.25*(1 - ss)); 
+				Ny = J[1][0] * (-0.25*(1 - tt)) + J[1][1] * (-0.25*(1 - ss));
+				Me[0][1] = Nx; Me[1][1] = Ny; 
+				break;
+		case 3:	
+				tt = -1 / sqrt(3); ss = -1 / sqrt(3);
+				Nx = J[0][0] * (-0.25*(1 - tt)) + J[0][1] * (-0.25*(1 - ss));
+				Ny = J[1][0] * (-0.25*(1 - tt)) + J[1][1] * (-0.25*(1 - ss));
+				Me[0][2] = Nx; Me[1][2] = Ny;
+				break;
+		case 4:
+				tt = 1 / sqrt(3); ss = -1 / sqrt(3);
+				Nx = J[0][0] * (-0.25*(1 - tt)) + J[0][1] * (-0.25*(1 - ss));
+				Ny = J[1][0] * (-0.25*(1 - tt)) + J[1][1] * (-0.25*(1 - ss));
+				Me[0][3] = Nx; Me[1][3] = Ny;
+				break;
+		}
+	}
+
+	// N2x N2y terms ONLY = invJ * N2s N2t (eval at 4 points/cases)
+	for (int i = 1; i <= 4; i++) {
+		switch (i) {
+		case 1:
+			tt = 1 / sqrt(3); ss = 1 / sqrt(3);
+			Nx = J[0][0] * (0.25*(1 - tt)) + J[0][1] * (-0.25*(1 + ss));
+			Ny = J[1][0] * (0.25*(1 - tt)) + J[1][1] * (-0.25*(1 + ss));
+			Me[2][0] = Nx; Me[3][0] = Ny;
+			break;
+		case 2:
+			tt = -1 / sqrt(3); ss = 1 / sqrt(3);
+			Nx = J[0][0] * (0.25*(1 - tt)) + J[0][1] * (-0.25*(1 + ss));
+			Ny = J[1][0] * (0.25*(1 - tt)) + J[1][1] * (-0.25*(1 + ss));
+			Me[2][1] = Nx; Me[3][1] = Ny;
+			break;
+		case 3:
+			tt = -1 / sqrt(3); ss = -1 / sqrt(3);
+			Nx = J[0][0] * (0.25*(1 - tt)) + J[0][1] * (-0.25*(1 + ss));
+			Ny = J[1][0] * (0.25*(1 - tt)) + J[1][1] * (-0.25*(1 + ss));
+			Me[2][2] = Nx; Me[3][2] = Ny;
+			break;
+		case 4:
+			tt = 1 / sqrt(3); ss = -1 / sqrt(3);
+			Nx = J[0][0] * (0.25*(1 - tt)) + J[0][1] * (-0.25*(1 + ss));
+			Ny = J[1][0] * (0.25*(1 - tt)) + J[1][1] * (-0.25*(1 + ss));
+			Me[2][3] = Nx; Me[3][3] = Ny;
+			break;
+		}
+	}
+
+	// N3x N3y terms ONLY = invJ * N3s N3t (eval at 4 points/cases)
+	for (int i = 1; i <= 4; i++) {
+		switch (i) {
+		case 1:
+			tt = 1 / sqrt(3); ss = 1 / sqrt(3);
+			Nx = J[0][0] * (0.25*(1 + tt)) + J[0][1] * (0.25*(1 + ss));
+			Ny = J[1][0] * (0.25*(1 + tt)) + J[1][1] * (0.25*(1 + ss));
+			Me[4][0] = Nx; Me[5][0] = Ny;
+			break;
+		case 2:
+			tt = -1 / sqrt(3); ss = 1 / sqrt(3);
+			Nx = J[0][0] * (0.25*(1 + tt)) + J[0][1] * (0.25*(1 + ss));
+			Ny = J[1][0] * (0.25*(1 + tt)) + J[1][1] * (0.25*(1 + ss));
+			Me[4][1] = Nx; Me[5][1] = Ny;
+			break;
+		case 3:
+			tt = -1 / sqrt(3); ss = -1 / sqrt(3);
+			Nx = J[0][0] * (0.25*(1 + tt)) + J[0][1] * (0.25*(1 + ss));
+			Ny = J[1][0] * (0.25*(1 + tt)) + J[1][1] * (0.25*(1 + ss));
+			Me[4][2] = Nx; Me[5][2] = Ny;
+			break;
+		case 4:
+			tt = 1 / sqrt(3); ss = -1 / sqrt(3);
+			Nx = J[0][0] * (0.25*(1 + tt)) + J[0][1] * (0.25*(1 + ss));
+			Ny = J[1][0] * (0.25*(1 + tt)) + J[1][1] * (0.25*(1 + ss));
+			Me[4][3] = Nx; Me[5][3] = Ny;
+			break;
+		}
+	}
+
+	// N4x N4y terms ONLY = invJ * N4s N4t (eval at 4 points/cases)
+	for (int i = 1; i <= 4; i++) {
+		switch (i) {
+		case 1:
+			tt = 1 / sqrt(3); ss = 1 / sqrt(3);
+			Nx = J[0][0] * (-0.25*(1 + tt)) + J[0][1] * (0.25*(1 - ss));
+			Ny = J[1][0] * (-0.25*(1 + tt)) + J[1][1] * (0.25*(1 - ss));
+			Me[6][0] = Nx; Me[7][0] = Ny;
+			break;
+		case 2:
+			tt = -1 / sqrt(3); ss = 1 / sqrt(3);
+			Nx = J[0][0] * (-0.25*(1 + tt)) + J[0][1] * (0.25*(1 - ss));
+			Ny = J[1][0] * (-0.25*(1 + tt)) + J[1][1] * (0.25*(1 - ss));
+			Me[6][1] = Nx; Me[7][1] = Ny;
+			break;
+		case 3:
+			tt = -1 / sqrt(3); ss = -1 / sqrt(3);
+			Nx = J[0][0] * (-0.25*(1 + tt)) + J[0][1] * (0.25*(1 - ss));
+			Ny = J[1][0] * (-0.25*(1 + tt)) + J[1][1] * (0.25*(1 - ss));
+			Me[6][2] = Nx; Me[7][2] = Ny;
+			break;
+		case 4:
+			tt = 1 / sqrt(3); ss = -1 / sqrt(3);
+			Nx = J[0][0] * (-0.25*(1 + tt)) + J[0][1] * (0.25*(1 - ss));
+			Ny = J[1][0] * (-0.25*(1 + tt)) + J[1][1] * (0.25*(1 - ss));
+			Me[6][3] = Nx; Me[7][3] = Ny;
+			break;
+		}
+	}
+
+}
+
+void FEM::selectB1B2(int i, int j, int k, double B1[3], double B2[3]) {
+	//B1 and B2 will depend on row and col (i,j)
+	// and also will be summed over 4 points (k =1,...4) from table Me 
+	switch (i) {
+	case 0: B1[0] = Me[0][k];	B1[1] = 0.0;		B1[2] = Me[1][k]; break;
+	case 1: B1[0] = 0.0;		B1[1] = Me[1][k];	B1[2] = Me[0][k]; break;
+	case 2:	B1[0] = Me[2][k];	B1[1] = 0.0;		B1[2] = Me[3][k]; break;
+	case 3:	B1[0] = 0.0;		B1[1] = Me[3][k];	B1[2] = Me[2][k]; break;
+	case 4:	B1[0] = Me[4][k];	B1[1] = 0.0;		B1[2] = Me[5][k]; break;
+	case 5:	B1[0] = 0.0;		B1[1] = Me[5][k];	B1[2] = Me[4][k]; break;
+	case 6:	B1[0] = Me[6][k];	B1[1] = 0.0;		B1[2] = Me[7][k]; break;
+	case 7:	B1[0] = 0.0;		B1[1] = Me[7][k];	B1[2] = Me[6][k]; break;
+	}
+	switch (j) {
+	case 0: B2[0] = Me[0][k];	B2[1] = 0.0;		B2[2] = Me[1][k]; break;
+	case 1: B2[0] = 0.0;		B2[1] = Me[1][k];	B2[2] = Me[0][k]; break;
+	case 2:	B2[0] = Me[2][k];	B2[1] = 0.0;		B2[2] = Me[3][k]; break;
+	case 3:	B2[0] = 0.0;		B2[1] = Me[3][k];	B2[2] = Me[2][k]; break;
+	case 4:	B2[0] = Me[4][k];	B2[1] = 0.0;		B2[2] = Me[5][k]; break;
+	case 5:	B2[0] = 0.0;		B2[1] = Me[5][k];	B2[2] = Me[4][k]; break;
+	case 6:	B2[0] = Me[6][k];	B2[1] = 0.0;		B2[2] = Me[7][k]; break;
+	case 7:	B2[0] = 0.0;		B2[1] = Me[7][k];	B2[2] = Me[6][k]; break;
+	}
+}
+
 
 void FEM::computeKMatrixT3() {
 
@@ -452,7 +725,7 @@ void FEM::computeKMatrixT3() {
 		}
 		
 		// scattering results into global matrix
-		scatter(Ke, K, n1, n2, n3);
+		scatter(Ke, K, n1, n2, n3,0);
 
 	}
 
@@ -526,7 +799,6 @@ void FEM::computeStress()
 double FEM::computeVonMises() {
 
 	// For 2D problems only
-
 	return sqrt((pow((sige[0] - sige[1]), 2) + pow(sige[0], 2) + pow(sige[1], 2) + 6 * pow(sige[2], 2)) / 2);
 }
 
@@ -534,7 +806,7 @@ double FEM::computeVonMises() {
 
 // Scattering
 
-void FEM::scatter(double** &Ke, double** &K, int n1, int n2, int n3) {
+void FEM::scatter(double** &Ke, double** &K, int n1, int n2, int n3, int n4) {
 
 	int row = 0, col =0;
 
@@ -547,6 +819,8 @@ void FEM::scatter(double** &Ke, double** &K, int n1, int n2, int n3) {
 		case 3: row = 2 * n2 - 1; break;
 		case 4: row = 2 * n3 - 2; break;
 		case 5: row = 2 * n3 - 1; break;
+		case 6: row = 2 * n4 - 2; break;
+		case 7: row = 2 * n4 - 1; break;
 		}
 
 		for (int j = 0; j < Kecol; j++) {
@@ -558,15 +832,10 @@ void FEM::scatter(double** &Ke, double** &K, int n1, int n2, int n3) {
 			case 3: col = 2 * n2 - 1; break;
 			case 4: col = 2 * n3 - 2; break;
 			case 5: col = 2 * n3 - 1; break;
+			case 6: col = 2 * n4 - 2; break;
+			case 7: col = 2 * n4 - 1; break;
 			}
 			K[row][col] = K[row][col] + Ke[i][j];
-			
-			/* Checking entries.. Note: 8th row is empty? why?
-			std::cout << "row:" << row << std::endl;
-			std::cout << "col:" << col << std::endl;
-			std::cout << "K[row][col]:" << K[row][col] << std::endl;
-			std::cout << "---------------------------" << std::endl;
-			*/
 		}
 	}
 
@@ -669,25 +938,52 @@ int FEM::getNumberOfFaces() {
 // Main function 
 void FEM::MainFunction() {
 
+	// Function: To distinguish between Triangular and Hex mesh for Stiffness Matrix (future work) 
+	//int index = getMeshType();
+	
+	//std::cout << "PRETEST" << std::endl;
+	//setDMatrix();
+	//B1[0] = 1; B1[1] = 0; B1[2] = 0;
+	//GLKMatrixLib::Mul(D, B1, 3, 1, temp3);
+	//std::cout << "B1: " << B1[0] << B1[1] << B1[2] << std::endl;
+	//std::cout << "temp3: " << temp3[0] << temp3[1] << temp3[2] << std::endl;
+
+	std::cout << "meshType is " << meshType << std::endl; 
+
 	// Do computations of matrix 
 	setProps();
 	setNodeMatrix();
 	setConnMatrix();
 	setDMatrix();
 
-	//PrintMatrix(matNodes, matNodesRow, matNodesCol);
-	//PrintMatrix(matConn, matConnRow, matConnCol);
+	PrintMatrix(matNodes, matNodesRow, matNodesCol);
+	PrintMatrix(matConn, matConnRow, matConnCol);
 
 	//Compute K matrix
-	if (meshType == 0) { computeKMatrixT3(); }
-	if (meshType == 1) { computeKMatrixQ4(); }
-	/*
+	if (meshType == 0) {
+		Kerow = 6; Kecol = 6;
+		GLKMatrixLib::CreateMatrix(Ke, Kerow, Kecol);
+		computeKMatrixT3(); 
+	}
+	if (meshType == 1) { 
+		Kerow = 8; Kecol = 8;
+		GLKMatrixLib::CreateMatrix(Ke, Kerow,Kecol);
+		computeKMatrixQ4(); 
+	}
+
+	//PrintMatrix(J, Jrow, Jcol);
+	//PrintMatrix(Me, Merow, Mecol);
+	//PrintMatrix(Ke, Kerow, Kecol);
+
 	//Set BCS
 	setBCs();
 
 	//Modify System of Equations based on BCs
 	scatterKmod(K, Kmod);
 	scatterfmod(f, fmod);
+
+	//PrintMatrix(Kmod, Kmodrow, Kmodcol);
+	//PrintVector(fmod, fmodrow);
 
 	//Solve system of equations
 	bool doesSystemSolve = GLKMatrixLib::GaussJordanElimination(Kmod, vars, fmod);
@@ -696,12 +992,15 @@ void FEM::MainFunction() {
 
 	std::cout << "bool doesSystemSolve =" << doesSystemSolve << std::endl;
 
+	std::cout << "displacements:" << std::endl;
+	PrintVector(d, drow);
+
 	//Compute Stresses
 	
-	computeStress();
+	//computeStress();
 
 	// POST PROCESSING **************************************
-
+	/*
 	//Normalize vonMisVec (first find max value, then divide all by it)
 	//double maxVM = 0.0;
 	//int maxVMindex = 0;
@@ -722,10 +1021,6 @@ void FEM::MainFunction() {
 	*/
 	
 	std::cout << "END OF FEM" << std::endl;
-
-	//Print
-	//std::cout << " Printing values passed to color map CASE: Normalized Von Mises" << std::endl;
-	//PrintVector(vonMisVec, vonMisVecrow);
 
 	/*
 	double totald;
@@ -785,14 +1080,17 @@ void FEM::Create() {
 	std::cout << "FEM::Create()" << std::endl;
 
 	GLKMatrixLib::CreateMatrix(matNodes, matNodesRow, matNodesCol);
-	GLKMatrixLib::CreateMatrix(matConn, matConnRow, matConnCol);
+	//GLKMatrixLib::CreateMatrix(matConn, matConnRow, matConnCol); this is created in setConnMatrix() its based on user input
 	GLKMatrixLib::CreateMatrix(B, Brow, Bcol);
 	GLKMatrixLib::CreateMatrix(D, Drow, Dcol);
 	CreateVector(f, frow);
 	CreateVector(d, drow);
 	GLKMatrixLib::CreateMatrix(K, Krow, Kcol);
-	GLKMatrixLib::CreateMatrix(Ke, Kerow, Kecol);
+	//GLKMatrixLib::CreateMatrix(Ke, Kerow, Kecol);
 	GLKMatrixLib::CreateMatrix(J, Jrow, Jcol);
+	CreateVector(B1, B1row);
+	CreateVector(B2, B2row);
+	CreateVector(temp3, t3row);
 
 	// Solving System of Equations
 	CreateVectorIsol(Isol, Isolrow);
@@ -816,14 +1114,21 @@ void FEM::Destroy() {
 	std::cout << "FEM::Destoy()" << std::endl;
 
 	GLKMatrixLib::DeleteMatrix(matNodes, matNodesRow, matNodesCol);
-	GLKMatrixLib::DeleteMatrix(matConn, matConnRow, matConnCol);
+	if(matConn != NULL) // only if matConn was allocated memory, do we need to deallocate
+		GLKMatrixLib::DeleteMatrix(matConn, matConnRow, matConnCol);
 	GLKMatrixLib::DeleteMatrix(B, Brow, Bcol);
 	GLKMatrixLib::DeleteMatrix(D, Drow, Dcol);
 	DeleteVector(f);
 	DeleteVector(d);
 	GLKMatrixLib::DeleteMatrix(K, Krow, Kcol);
-	GLKMatrixLib::DeleteMatrix(Ke, Kerow, Kecol);
+	if(Ke != NULL) //Ke value is set in analyze (because of meshtype choice)
+		GLKMatrixLib::DeleteMatrix(Ke, Kerow, Kecol);
 	GLKMatrixLib::DeleteMatrix(J, Jrow, Jcol);
+	if(Me != NULL)
+		GLKMatrixLib::DeleteMatrix(Me, Merow, Mecol);
+	DeleteVector(B1);
+	DeleteVector(B2);
+	DeleteVector(temp3);
 
 	// Solving system of equations
 	DeleteVectorIsol(Isol);
