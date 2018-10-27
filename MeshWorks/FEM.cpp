@@ -98,10 +98,6 @@ void FEM::setNodeMatrix() {
 
 	QBody * body = (QBody*)(pDoc->m_meshList).GetHead();
 
-	std::cout << "(QBody*)(pDoc->m_meshList).GetHead():" << (QBody*)(pDoc->m_meshList).GetHead() << std::endl;
-	std::cout << "body->GetTrglNodeList().GetHeadPosition():" << body->GetTrglNodeList().GetHeadPosition() << std::endl;
-
-	/*
 	QMeshNode* pNode = (QMeshNode*)body->GetTrglNodeList().GetHead();
 
 	int c = 0; // counter
@@ -114,9 +110,10 @@ void FEM::setNodeMatrix() {
 
 		c = c + 1;
 	}
-	*/
+	
 }
 
+// TO DO: Q4
 int FEM::getMeshType() {
 	
 	// Need pWnd to access GetActiveDocument and GetMainView unlike in CMainFrame:: functions 
@@ -212,6 +209,8 @@ void FEM::setDMatrix() {
 
 void FEM::setBCs() {
 
+	// TO DO: Make boundary conditions(BCs) softcoded
+
 	// FOR GENERAL CASE
 
 	// CASE 1: DANGER (ONLY FOR SQUARE MESH) affected nodes and ONLY SELF MADE MESH will make sense
@@ -226,12 +225,14 @@ void FEM::setBCs() {
 	int DOF6 = 2;
 	int FORCEDOF = nNodes * 2;
 
-	//std::cout << "DOF1:" << DOF1 << std::endl;
-	//std::cout << "DOF2:" << DOF2 << std::endl;
-	//std::cout << "DOF3:" << DOF3 << std::endl;
-	//std::cout << "DOF4:" << DOF4 << std::endl;
-	//std::cout << "DOF5:" << DOF5 << std::endl;
-	//std::cout << "FORCE DOF:" << FORCEDOF << std::endl;
+	/*
+	std::cout << "DOF1:" << DOF1 << std::endl;
+	std::cout << "DOF2:" << DOF2 << std::endl;
+	std::cout << "DOF3:" << DOF3 << std::endl;
+	std::cout << "DOF4:" << DOF4 << std::endl;
+	std::cout << "DOF5:" << DOF5 << std::endl;
+	std::cout << "FORCE DOF:" << FORCEDOF << std::endl;
+	*/// Printing 
 
 	int c = 0;
 	for (int i = 1; i <= nDOF; i++) {
@@ -434,6 +435,8 @@ double FEM::integral(double(*f)(double x), double a, double b, int n) {
 
 void FEM::computeKMatrixQ4() {
 
+	// TO DO: Validate and complete code and comments/references for Q4
+
 	std::cout << "Computing KMatrixQ4()" << std::endl;
 
 	int n1, n2, n3, n4;
@@ -454,6 +457,22 @@ void FEM::computeKMatrixQ4() {
 
 		// Compute area for integral
 		double A; 
+
+		// Shape functions of parent element in isoparametric coordinates
+		// Ref: MANE 4240 & CIVL 4230 Intro to Finite Elements - Mapped element geometries and shape functions : the isoparametric formulation pg.6
+		// Shape functions expressed in (s,t) coord system
+		// N1 = 0.25*(1-ss)*(1-tt)
+		// N2 = 0.25*(1+ss)*(1-tt)
+		// N3 = 0.25*(1+ss)*(1+tt)
+		// N4 = 0.25*(1-ss)*(1+tt)
+		// It is laborious to find the inverse map s(x,y) and t(x,y)
+		// Instead we compute the integrals in the domain of parent element
+
+		// Using chain rule to find dNi/dx and dNi/dy
+		// (1) dNi/dx(s,t) = dNi(s,t)/ds *ds/dx
+		// (2) x = sum (Ni(s,t)*xi)
+		// (3) dx/ds = sum( dNi/ds *xi) = J = Jacobian of mapping
+		// Plug in (3) into (1) 
 
 		// compute Jacobian 
 		double dxds, dxdt, dyds, dydt;
@@ -524,6 +543,9 @@ void FEM::computeKMatrixQ4() {
 }
 
 void FEM::setShapeFunctionTable() {
+
+	// TO DO: Validate and complete code and comments/references for Q4
+
 	// Me is a table (8by4) of shape functions at gaussian quadrature values 
 	// Format: 
 	//	    (1/sq(3), 1/sq(3) ) (-1/sq(3), 1/sq(3) ) (-1/sq(3), -1/sq(3) ) (1/sq(3), -1/sq(3) ) 
@@ -540,26 +562,6 @@ void FEM::setShapeFunctionTable() {
 	GLKMatrixLib::CreateMatrix(Me, Merow, Mecol);
 	
 	double tt, ss; // local variables whereas x,y are global
-
-	// Shape functions of parent element in isoparametric coordinates
-	// Ref: MANE 4240 & CIVL 4230 Intro to Finite Elements - Mapped element geometries and shape functions : the isoparametric formulationpg.6
-
-	// Shape functions expressed in (s,t) coord system
-	// N1 = 0.25*(1-ss)*(1-tt)
-	// N2 = 0.25*(1+ss)*(1-tt)
-	// N3 = 0.25*(1+ss)*(1+tt)
-	// N4 = 0.25*(1-ss)*(1+tt)
-
-	// It is laborious to find the inverse map s(x,y) and t(x,y)
-	// Instead we compute the integrals in the domain of parent element
-	//		Nx,
-	//		Ny, Nx, 
-	//		  , Ny, 
-	//
-	//Me = 
-	//
-	//
-	//
 
 	double Nx, Ny;
 	// N1x N1y terms ONLY = invJ * N1s N1t (eval at 4 points/cases)
@@ -685,6 +687,9 @@ void FEM::setShapeFunctionTable() {
 }
 
 void FEM::selectB1B2(int i, int j, int k, double B1[3], double B2[3]) {
+
+	// TO DO: Validate and complete code and comments/references for Q4
+
 	//B1 and B2 will depend on row and col (i,j)
 	// and also will be summed over 4 points (k =1,...4) from table Me 
 	switch (i) {
@@ -716,6 +721,7 @@ void FEM::computeKMatrixT3() {
 	double x1, y1, x2, y2, x3, y3;
 	double b1, b2, b3, c1, c2, c3, A;
 
+	// For each element compute Ke
 	for (int element = 0; element < nFaces; element++) {
 
 		// Extracting node number from matConn matrix
@@ -730,6 +736,16 @@ void FEM::computeKMatrixT3() {
 
 		// Computing area of element
 		A = 0.5*((x2*y3 - x3*y2) + (x3*y1 - x1*y3) + (x1*y2 - x2*y1)); // needs an absolute sign
+
+		// Ref: Boeraeve 2010 
+		// N1 = (a1+b1*x+c1*y)/2A
+		// N2 = (a2+b2*x+c2*y)/2A
+		// N3 = (a3+b3*x+c3*y)/2A
+		// u(x,y) = N1*u1 +N2*u2 +N3*u3
+		// v(x,y) = N1*v1 +N2*v2 +N3*v3
+		// vec(u) = mat(N)*d	(2D)
+		// e = du/dx = dN/dx*ui (1D) 
+		// e = B*d				(2D)
 
 		// Computing elements of matrix B
 		b1 = y2 - y3; b2 = y3 - y1; b3 = y1 - y2;
@@ -998,7 +1014,7 @@ void FEM::MainFunction() {
 	bool debug = true;
 
 	//Compute K matrix
-	if (debug = false) {
+
 		if (meshType == 0) {
 			Kerow = 6; Kecol = 6;
 			GLKMatrixLib::CreateMatrix(Ke, Kerow, Kecol);
@@ -1010,16 +1026,24 @@ void FEM::MainFunction() {
 			computeKMatrixQ4();
 		}
 
+		//std::cout << "J and M and Ke respectively" << std::endl; 
 		//PrintMatrix(J, Jrow, Jcol);
 		//PrintMatrix(Me, Merow, Mecol);
-		//PrintMatrix(Ke, Kerow, Kecol);
+		PrintMatrix(Ke, Kerow, Kecol);
+		PrintMatrix(K, Krow, Kcol);
 
 		//Set BCS
 		setBCs();
 
+		// Print IC values
+		//PrintVector(Isol, Isolrow); // does not work
+		PrintVector(f, frow);
+
+
 		//Modify System of Equations based on BCs
 		scatterKmod(K, Kmod);
 		scatterfmod(f, fmod);
+
 
 		//PrintMatrix(Kmod, Kmodrow, Kmodcol);
 		//PrintVector(fmod, fmodrow);
@@ -1038,6 +1062,7 @@ void FEM::MainFunction() {
 
 		computeStress();
 
+
 		// POST PROCESSING **************************************
 
 		std::ofstream myfile;
@@ -1048,28 +1073,25 @@ void FEM::MainFunction() {
 			myfile << i << " " << matNodes[i][0] << " " << matNodes[i][1] << " " << d[j] << " " << d[j + 1] << " " << dtot << std::endl;
 		}
 
+
+
+	//Normalize vonMisVec (first find max value, then divide all by it)
+	double maxVM = 0.0;
+	int maxVMindex = 0;
+	for (int i = 0; i < nFaces; i++) {
+		if (vonMisVec[i] > maxVM) {
+			maxVM = vonMisVec[i];
+			maxVMindex = i;
+		}
+
 	}
 
 
-	/*
-	//Normalize vonMisVec (first find max value, then divide all by it)
-	//double maxVM = 0.0;
-	//int maxVMindex = 0;
-	//for (int i = 0; i < nFaces; i++) {
-	//	if (vonMisVec[i] > maxVM) {
-	//		maxVM = vonMisVec[i];
-	//		maxVMindex = i;
-	//	}
+	std::cout << "Max VM (Pa): " << maxVM << "at Face index" << maxVMindex << std::endl;
 
-	//}
-
-
-	//std::cout << "Max VM (Pa): " << maxVM << "at Face index" << maxVMindex << std::endl;
-
-	//for (int i = 0; i < nFaces; i++) {
-	//	vonMisVec[i] = 1.0 - (vonMisVec[i]/ maxVM);
-	//}
-	*/
+	for (int i = 0; i < nFaces; i++) {
+		vonMisVec[i] = 1.0 - (vonMisVec[i]/ maxVM);
+	}
 	
 	std::cout << "END OF FEM" << std::endl;
 
