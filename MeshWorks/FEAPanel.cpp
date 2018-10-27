@@ -1,9 +1,22 @@
 
 #include "stdafx.h"
+#include "FEM.h"
+#include "Mainfrm.h"
+
+#include "MeshWorksDoc.h" // for pDoc -> m_meshlist 
+
+#include "MeshWorksView.h"
+#include "..\GLKernel\GLKernelView.h"
+
+#include "..\MeshEntities\QBody.h"  // for body and mesh entities pFace etc...
+#include "..\GLKLib\GLKMatrixLib.h" // for linear algebra
+
+#include "..\ANN\ANN.h"
+
 #include "MeshWorks.h"
 #include "FEAPanel.h"
-#include "Mainfrm.h"
-#include "FEM.h"
+
+
 #include <iostream>
 
 //added for ensuring OnAppFEA is not run unless 
@@ -62,14 +75,21 @@ END_MESSAGE_MAP()
 // App command to run the dialog
 void CMeshWorksApp::OnAppFEA()
 {
-	// TO DO:
-	// Bug : when User clicks on FEA from Menu and no mesh imported it crashes 
-	// Need to make sure file is loaded before DoModal because it crashes
-	// Dyn memory is not deallocated !! Bad. 
+	CMainFrame *pWnd = (CMainFrame *)(AfxGetMainWnd());
+	CMeshWorksDoc *pDoc = (CMeshWorksDoc *)(pWnd->GetActiveDocument());
+	CGLKernelView *cView = pWnd->GetMainView()->GetGLKernelView();
 
-	CFEADlg FEADlg;
-	FEADlg.DoModal();
-	
+	// Check to see if mesh is loaded before calling DoModal()
+	int flagMeshLoaded = cView->DisplayObjCount();
+
+	if (flagMeshLoaded >= 1) {
+		CFEADlg FEADlg;
+		FEADlg.DoModal();
+	}
+	else{
+		AfxMessageBox("No mesh loaded");
+	}
+
 }
 
 
@@ -97,6 +117,7 @@ void CFEADlg::OnBnClickedSetprops()
 
 void CFEADlg::OnBnClickedAnalyze()
 {
+
 	pFEM->MainFunction();
 
 	//CString str;

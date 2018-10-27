@@ -97,6 +97,11 @@ void FEM::setNodeMatrix() {
 	CGLKernelView *cView = pWnd->GetMainView()->GetGLKernelView();
 
 	QBody * body = (QBody*)(pDoc->m_meshList).GetHead();
+
+	std::cout << "(QBody*)(pDoc->m_meshList).GetHead():" << (QBody*)(pDoc->m_meshList).GetHead() << std::endl;
+	std::cout << "body->GetTrglNodeList().GetHeadPosition():" << body->GetTrglNodeList().GetHeadPosition() << std::endl;
+
+	/*
 	QMeshNode* pNode = (QMeshNode*)body->GetTrglNodeList().GetHead();
 
 	int c = 0; // counter
@@ -109,6 +114,7 @@ void FEM::setNodeMatrix() {
 
 		c = c + 1;
 	}
+	*/
 }
 
 int FEM::getMeshType() {
@@ -167,6 +173,14 @@ void FEM::setConnMatrix() {
 
 	QBody * body = (QBody*)(pDoc->m_meshList).GetHead();
 	QMeshFace* pFace = (QMeshFace*)body->GetTrglFaceList().GetHead();
+
+	// Element Connectivity Matrix
+	// Ref: Programming the FEM with Matlab - Jack Chessa - 3rd October 2002 - pg.4 
+
+	// Construct matrix of node numbers where each row of the matrix contains 
+	// the connectivity of an element 
+	// Connectivities are all ordered in counter-clockwise fashion i.e 
+	// Jacobians are not negative, thus causing Kmatrix to be singular 
 
 	int c = 0; // counter
 	for (GLKPOSITION Pos = body->GetTrglFaceList().GetHeadPosition(); Pos != NULL; ) {
@@ -527,11 +541,25 @@ void FEM::setShapeFunctionTable() {
 	
 	double tt, ss; // local variables whereas x,y are global
 
-	// Compute table of Ni,x Ni,y 
+	// Shape functions of parent element in isoparametric coordinates
+	// Ref: MANE 4240 & CIVL 4230 Intro to Finite Elements - Mapped element geometries and shape functions : the isoparametric formulationpg.6
+
+	// Shape functions expressed in (s,t) coord system
 	// N1 = 0.25*(1-ss)*(1-tt)
 	// N2 = 0.25*(1+ss)*(1-tt)
 	// N3 = 0.25*(1+ss)*(1+tt)
 	// N4 = 0.25*(1-ss)*(1+tt)
+
+	// It is laborious to find the inverse map s(x,y) and t(x,y)
+	// Instead we compute the integrals in the domain of parent element
+	//		Nx,
+	//		Ny, Nx, 
+	//		  , Ny, 
+	//
+	//Me = 
+	//
+	//
+	//
 
 	double Nx, Ny;
 	// N1x N1y terms ONLY = invJ * N1s N1t (eval at 4 points/cases)
@@ -782,6 +810,8 @@ void FEM::computeStress()
 
 		double xavg = (x1 + x2 + x3) / 3;
 		double yavg = (y1 + y2 + y3) / 3;
+
+		// Writing to file
 		toFile(element, xavg,yavg,sige[0], sige[1], sige[2], vonMises,myfile);
 
 		//Print stresses
@@ -948,6 +978,12 @@ void FEM::MainFunction() {
 	//std::cout << "B1: " << B1[0] << B1[1] << B1[2] << std::endl;
 	//std::cout << "temp3: " << temp3[0] << temp3[1] << temp3[2] << std::endl;
 
+
+	// START OF PROGRAM
+
+	//setting mesh to Triangular 
+	meshType = 0;
+
 	std::cout << "meshType is " << meshType << std::endl; 
 
 	// Do computations of matrix 
@@ -959,47 +995,62 @@ void FEM::MainFunction() {
 	PrintMatrix(matNodes, matNodesRow, matNodesCol);
 	PrintMatrix(matConn, matConnRow, matConnCol);
 
+	bool debug = true;
+
 	//Compute K matrix
-	if (meshType == 0) {
-		Kerow = 6; Kecol = 6;
-		GLKMatrixLib::CreateMatrix(Ke, Kerow, Kecol);
-		computeKMatrixT3(); 
+	if (debug = false) {
+		if (meshType == 0) {
+			Kerow = 6; Kecol = 6;
+			GLKMatrixLib::CreateMatrix(Ke, Kerow, Kecol);
+			computeKMatrixT3();
+		}
+		if (meshType == 1) {
+			Kerow = 8; Kecol = 8;
+			GLKMatrixLib::CreateMatrix(Ke, Kerow, Kecol);
+			computeKMatrixQ4();
+		}
+
+		//PrintMatrix(J, Jrow, Jcol);
+		//PrintMatrix(Me, Merow, Mecol);
+		//PrintMatrix(Ke, Kerow, Kecol);
+
+		//Set BCS
+		setBCs();
+
+		//Modify System of Equations based on BCs
+		scatterKmod(K, Kmod);
+		scatterfmod(f, fmod);
+
+		//PrintMatrix(Kmod, Kmodrow, Kmodcol);
+		//PrintVector(fmod, fmodrow);
+
+		//Solve system of equations
+		bool doesSystemSolve = GLKMatrixLib::GaussJordanElimination(Kmod, vars, fmod);
+		//bool doesSystemSolve = GLKMatrixLib::GaussSeidelSolver(Kmod, fmod, vars, dmod,1e-6);
+		scatterBackDisplacements(fmod, d);
+
+		std::cout << "bool doesSystemSolve =" << doesSystemSolve << std::endl;
+
+		std::cout << "displacements:" << std::endl;
+		PrintVector(d, drow);
+
+		//Compute Stresses
+
+		computeStress();
+
+		// POST PROCESSING **************************************
+
+		std::ofstream myfile;
+		double dtot;
+		myfile.open("displacements.txt");
+		for (int i = 0, j = 0; i < nNodes; i++, j = j + 2) {
+			dtot = sqrt(pow(d[j], 2) + pow(d[j + 1], 2));
+			myfile << i << " " << matNodes[i][0] << " " << matNodes[i][1] << " " << d[j] << " " << d[j + 1] << " " << dtot << std::endl;
+		}
+
 	}
-	if (meshType == 1) { 
-		Kerow = 8; Kecol = 8;
-		GLKMatrixLib::CreateMatrix(Ke, Kerow,Kecol);
-		computeKMatrixQ4(); 
-	}
 
-	//PrintMatrix(J, Jrow, Jcol);
-	//PrintMatrix(Me, Merow, Mecol);
-	//PrintMatrix(Ke, Kerow, Kecol);
 
-	//Set BCS
-	setBCs();
-
-	//Modify System of Equations based on BCs
-	scatterKmod(K, Kmod);
-	scatterfmod(f, fmod);
-
-	//PrintMatrix(Kmod, Kmodrow, Kmodcol);
-	//PrintVector(fmod, fmodrow);
-
-	//Solve system of equations
-	bool doesSystemSolve = GLKMatrixLib::GaussJordanElimination(Kmod, vars, fmod);
-	//bool doesSystemSolve = GLKMatrixLib::GaussSeidelSolver(Kmod, fmod, vars, dmod,1e-6);
-	scatterBackDisplacements(fmod, d);
-
-	std::cout << "bool doesSystemSolve =" << doesSystemSolve << std::endl;
-
-	std::cout << "displacements:" << std::endl;
-	PrintVector(d, drow);
-
-	//Compute Stresses
-	
-	//computeStress();
-
-	// POST PROCESSING **************************************
 	/*
 	//Normalize vonMisVec (first find max value, then divide all by it)
 	//double maxVM = 0.0;
